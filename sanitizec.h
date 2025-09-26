@@ -1,10 +1,8 @@
 #ifndef SANITIZEC_H
 #define SANITIZEC_H
 
-// --- Rule Definitions ---
-// Define rule bitmasks for the sole XSS rule
 #define SANITIZEC_RULE_NONE 0
-#define SANITIZEC_RULE_XSS_ESCAPE (1 << 0)// Handles '<', '>', '&', '"', "'"
+#define SANITIZEC_RULE_XSS_ESCAPE (1 << 0)
 #define SANITIZEC_RULE_WHITESPACE_TRIM (1 << 1)
 #define SANITIZEC_RULE_ALPHA_ONLY (1 << 2)
 #define SANITIZEC_RULE_NUMERIC_ONLY (1 << 3)
@@ -12,22 +10,15 @@
 #define SANITIZEC_RULE_LFI (1 << 5)
 #define SANITIZEC_RULE_SQL (1 << 6)
 #define SANITIZEC_RULE_REVERSE_SHELL (1 << 7)
-// --- Function Prototypes ---
 
 /**
- * @brief Applies XSS escaping to an input string synchronously.
- * This is a stateless operation.
+ * @brief Applies sanitization rules to an input string.
  *
- * @param input The original string to sanitize (will not be modified).
- * @param ruleset A bitmask of SANITIZEC_RULE_X flags indicating which rules
- * to apply.
- * @param errmsg A pointer to a char* which will be set to a dynamically
- * allocated error message on failure, or NULL on success. Caller must free
- * if set.
- * @return char* A new, dynamically allocated sanitized string, or NULL on
- * error or if input is NULL. The caller is responsible for freeing the
- * returned string.
+ * @param input The original string to sanitize.
+ * @param ruleset Bitmask of sanitization rules to apply.
+ * @param errmsg Pointer to store error message if sanitization fails.
+ * @return char* Sanitized string, or NULL on error.
  */
 char* sanitizec_apply(const char* input, int ruleset, char** errmsg);
 
-#endif// SANITIZEC_H
+#endif
