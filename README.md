@@ -1,14 +1,21 @@
 ### sanitizec
 
-A small, minimal C library for string sanitization in web development, focused on performance and flexibility for C developers.
-Features
+A small, ruled based, minimal C library for string sanitization in web development, focused on performance and flexibility for C developers.
 
-- Lightweight: Minimal dependencies, ideal for embedded or performance-critical applications.
+### Available Sanitization Rules
 
-- Configurable: Choose from built-in rulesets or create your own custom combinations using a bitmask.
+| Rule Name | Bitmask | Description | Example |
+| :--- | :--- | :--- | :--- |
+| **XSS Escape** | `SANITIZEC_RULE_XSS_ESCAPE` | Escapes HTML characters (`<`, `>`, `&`, `"`, `'`) to prevent Cross-Site Scripting (XSS). | `"<script>alert('xss');</script>"` becomes `"&lt;script&gt;alert(&#39;xss&#39;);&lt;/script&gt;"` |
+| **Trim Whitespace** | `SANITIZEC_RULE_WHITESPACE_TRIM` | Removes leading and trailing whitespace from a string. | `"  Hello World  "` becomes `"Hello World"` |
+| **Alpha Only** | `SANITIZEC_RULE_ALPHA_ONLY` | Filters out all characters that are not alphabetic letters (A-Z, a-z). | `"User-123_Name"` becomes `"UserName"` |
+| **Numeric Only** | `SANITIZEC_RULE_NUMERIC_ONLY` | Filters out all characters that are not numeric digits (0-9). | `"Price: $12.50"` becomes `"1250"` |
+| **Alphanumeric Only** | `SANITIZEC_RULE_ALPHANUMERIC_ONLY` | Filters out all characters that are not alphanumeric (A-Z, a-z, 0-9). | `"User-Name: JohnDoe_123!"` becomes `"UserNameJohnDoe123"` |
+| **LFI** | `SANITIZEC_RULE_LFI` | Removes `../` and `..` to prevent directory traversal in file paths. | `"/etc/passwd"` becomes `"/etc/passwd"` but `"../../etc/passwd"` becomes `"/etc/passwd"` |
+| **SQL** | `SANITIZEC_RULE_SQL` | Removes common SQL keywords to mitigate SQL injection attacks. | `"1 OR 1=1; --"` becomes `"1 "` |
+| **Reverse Shell** | `SANITIZEC_RULE_REVERSE_SHELL` | Removes keywords associated with reverse shell commands. | `"; nc 127.0.0.1 4444 -e /bin/sh"` becomes `"; 127.0.0.1 4444 /bin/sh"` |
 
-- Built-in Rules:
-...
+
 ### Installation and Building
 
 The library uses Ninja for building, driven by a dynamically generated build.ninja file.
@@ -49,7 +56,32 @@ chmod +x install.sh
 sudo ./install.sh
 ```
 
-Note: If successful, the library will be installed as /usr/local/lib/libsanitizec.so and the header as /usr/local/include/sanitizec.h.
+#### Example Usage
 
+``` c
+#include <stdio.h>
+#include <stdlib.h>
+#include <sanitizec.h>
 
-#### Usage...
+int main() {
+    const char* input_string = "My product ID is #987654321!";
+    char* error_message = NULL;
+
+    char* sanitized_output = sanitizec_apply(input_string, SANITIZEC_RULE_NUMERIC_ONLY, &error_message);
+
+    if (sanitized_output) {
+        printf("Original: %s\n", input_string); // 'My product ID is #987654321!'
+        printf("Sanitized: %s\n", sanitized_output); // '987654321'
+        free(sanitized_output); 
+    } else {
+        fprintf(stderr, "Error: %s\n", error_message);
+        if (error_message) {
+            free(error_message);
+        }
+    }
+
+    return 0;
+}
+
+```
+
