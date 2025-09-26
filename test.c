@@ -1,35 +1,34 @@
-#include "sanitizec.h"
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <stdio.h>
+// Include the header for your plain C test function
+#include "tests/escape_xss/escape_xss.h"
 
-int main() {
-    // Input containing HTML tags, XSS payload, quotes, and ampersands
-    const char* test_input_1 = "User Input: <script>alert('Hello & World!')</script> and \"quotes\"";
-    char *errmsg = NULL;
-    char *safe_output = NULL;
+/**
+ * @brief Main test manager entry point.
+ * * Runs all defined test functions and reports the final count of failures.
+ */
+int main(void)
+{
+    int number_failed = 0;
+    int total_tests = 0;
 
-    printf("--- SanitizeC Test Program (XSS Escape Only) ---\n\n");
-    printf("Input: %s\n", test_input_1);
+    printf("--- Starting SanitizeC Test Manager ---\n\n");
 
-    // Apply the only implemented rule: SANITIZEC_RULE_XSS_ESCAPE
-    safe_output = sanitizec_apply(test_input_1, SANITIZEC_RULE_XSS_ESCAPE, &errmsg);
-
-    if (safe_output) {
-        printf("Output: %s\n", safe_output);
-        free(safe_output);
-    } else {
-        // If sanitizec_apply fails, check and report the error message
-        fprintf(stderr, "Sanitization failed!\n");
-        if (errmsg) {
-            fprintf(stderr, "Error Message: %s\n", errmsg);
-            free(errmsg); // Free the allocated error string
-        } else {
-            fprintf(stderr, "Error Message: Unknown failure (returned NULL without setting errmsg).\n");
-        }
+    // --- Run Test Suite 1: XSS Escape ---
+    total_tests++;
+    if (run_xss_escape_test() == 0) { // run_xss_escape_test returns 0 on failure
+        number_failed++;
     }
 
-    printf("\n--- Test complete ---\n");
+    // Add more test suite calls here as you develop them...
+    // total_tests++;
+    // if (run_another_test() == 0) { number_failed++; }
 
-    return 0;
+
+    printf("\n--- Test Manager Complete ---\n");
+    printf("Total test modules run: %d\n", total_tests);
+    printf("Total test modules failed: %d\n", number_failed);
+
+    // Return the number of failed tests as the exit code
+    return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
