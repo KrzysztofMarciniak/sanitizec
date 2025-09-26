@@ -2,7 +2,7 @@
 set -xe
 
 # Project files
-LIB_NAME="sanitizerc"
+LIB_NAME="sanitizec"
 SHARED_LIB="lib${LIB_NAME}.so"
 HEADER_FILE="${LIB_NAME}.h"
 
