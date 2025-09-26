@@ -10,6 +10,7 @@
 #include "rules/escape_xss/escape_xss.h"
 #include "rules/numeric_only/numeric_only.h"
 #include "rules/sanitize_lfi/sanitize_lfi.h"
+#include "rules/sanitize_sql/sanitize_sql.h"
 #include "rules/trim_whitespace/trim_whitespace.h"
 
 // --- Rule Lookup Infrastructure ---
@@ -40,6 +41,7 @@ static const rule_map_t rules_map[] = {
     {SANITIZEC_RULE_ALPHANUMERIC_ONLY, alphanumeric_only_apply,
      "Letters and Numbers only"},
     {SANITIZEC_RULE_LFI, lfi_apply, "Remove ../ and .."},
+    {SANITIZEC_RULE_SQL, sql_safe_apply, "Remove sql keywords."},
     {0, NULL, NULL}// Sentinel
 };
 

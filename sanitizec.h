@@ -10,6 +10,7 @@
 #define SANITIZEC_RULE_NUMERIC_ONLY (1 << 3)
 #define SANITIZEC_RULE_ALPHANUMERIC_ONLY (1 << 4)
 #define SANITIZEC_RULE_LFI (1 << 5)
+#define SANITIZEC_RULE_SQL (1 << 6)
 // --- Function Prototypes ---
 
 /**
