@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 // Include the header for your plain C test function
+#include "tests/alpha_only/alpha_only.h"
+#include "tests/alphanumeric_only/alphanumeric_only.h"
 #include "tests/escape_xss/escape_xss.h"
+#include "tests/numeric_only/numeric_only.h"
 #include "tests/trim_whitespace/trim_whitespace.h"
 
 /**
@@ -22,6 +25,18 @@ int main(void) {
         // --- Run Test Suite 2: Trim Whitespace ---
         total_tests++;
         if (run_trim_whitespace_test() == 0) {
+                number_failed++;
+        }
+        total_tests++;
+        if (run_alpha_only_test() == 0) {
+                number_failed++;
+        }
+        total_tests++;
+        if (run_numeric_only_test() == 0) {
+                number_failed++;
+        }
+        total_tests++;
+        if (run_alphanumeric_only_test() == 0) {
                 number_failed++;
         }
 
