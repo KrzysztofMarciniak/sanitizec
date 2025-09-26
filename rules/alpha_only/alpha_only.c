@@ -9,7 +9,9 @@
 char* alpha_only_apply(char* input, char** errmsg) {
         if (errmsg) *errmsg = NULL;
         if (!input) {
-                if (errmsg) *errmsg = strdup_safe("Alpha-only Rule: Input is NULL.");
+                if (errmsg)
+                        *errmsg =
+                            strdup_safe("Alpha-only Rule: Input is NULL.");
                 return NULL;
         }
 
@@ -17,7 +19,9 @@ char* alpha_only_apply(char* input, char** errmsg) {
         char* output = (char*)malloc(len + 1);
         if (!output) {
                 free(input);
-                if (errmsg) *errmsg = strdup_safe("Alpha-only Rule: Allocation failed.");
+                if (errmsg)
+                        *errmsg =
+                            strdup_safe("Alpha-only Rule: Allocation failed.");
                 return NULL;
         }
 

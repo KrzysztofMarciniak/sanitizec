@@ -12,12 +12,13 @@
  * * @return 1 on success, 0 on failure.
  */
 int run_trim_whitespace_test(void) {
-        const char *input    = "  \t  Hello, World!  \n\n ";
-        const char *expected = "Hello, World!";
+        const char* input    = "  \t  Hello, World!  \n\n ";
+        const char* expected = "Hello, World!";
 
-        char *errmsg = NULL;
-        char *output = sanitizec_apply(input, SANITIZEC_RULE_WHITESPACE_TRIM, &errmsg);
-        int success  = 0;
+        char* errmsg = NULL;
+        char* output =
+            sanitizec_apply(input, SANITIZEC_RULE_WHITESPACE_TRIM, &errmsg);
+        int success = 0;
 
         printf("testing: [trim_whitespace]\n");
         printf("str: [%s]\n", input);

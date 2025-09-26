@@ -11,16 +11,17 @@
  * @return 1 on success, 0 on failure.
  */
 int run_alphanumeric_only_test(void) {
-        const char *input    = "User-Name: JohnDoe_123!";
-        const char *expected = "UserNameJohnDoe123";
-        char *errmsg         = NULL;
-        char *safe_output    = NULL;
+        const char* input    = "User-Name: JohnDoe_123!";
+        const char* expected = "UserNameJohnDoe123";
+        char* errmsg         = NULL;
+        char* safe_output    = NULL;
         int success          = 0;
 
         printf("testing: [Letters and Numbers only]\n");
         printf("str: %s\n", input);
 
-        safe_output = sanitizec_apply(input, SANITIZEC_RULE_ALPHANUMERIC_ONLY, &errmsg);
+        safe_output =
+            sanitizec_apply(input, SANITIZEC_RULE_ALPHANUMERIC_ONLY, &errmsg);
 
         if (safe_output == NULL) {
                 printf("str sanitized : (NULL)\nfailure! (Error: %s)\n",

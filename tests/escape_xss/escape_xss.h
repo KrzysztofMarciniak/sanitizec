@@ -5,4 +5,4 @@
 // Returns 1 for success, 0 for failure.
 int run_xss_escape_test(void);
 
-#endif // ESCAPE_XSS_H
+#endif// ESCAPE_XSS_H

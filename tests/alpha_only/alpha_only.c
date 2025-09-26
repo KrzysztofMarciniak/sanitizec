@@ -11,16 +11,17 @@
  * @return 1 on success, 0 on failure.
  */
 int run_alpha_only_test(void) {
-        const char *input    = "Hello World! 123 is a great 😃day.";
-        const char *expected = "HelloWorldisagreatday";
-        char *errmsg         = NULL;
-        char *safe_output    = NULL;
+        const char* input    = "Hello World! 123 is a great 😃day.";
+        const char* expected = "HelloWorldisagreatday";
+        char* errmsg         = NULL;
+        char* safe_output    = NULL;
         int success          = 0;
 
         printf("testing: [Alphabetic letters only]\n");
         printf("str: %s\n", input);
 
-        safe_output = sanitizec_apply(input, SANITIZEC_RULE_ALPHA_ONLY, &errmsg);
+        safe_output =
+            sanitizec_apply(input, SANITIZEC_RULE_ALPHA_ONLY, &errmsg);
 
         if (safe_output == NULL) {
                 printf("str sanitized : (NULL)\nfailure! (Error: %s)\n",

@@ -11,16 +11,17 @@
  * @return 1 on success, 0 on failure.
  */
 int run_numeric_only_test(void) {
-        const char *input    = "Account Number: 123-ABC-456-XYZ";
-        const char *expected = "123456";
-        char *errmsg         = NULL;
-        char *safe_output    = NULL;
+        const char* input    = "Account Number: 123-ABC-456-XYZ";
+        const char* expected = "123456";
+        char* errmsg         = NULL;
+        char* safe_output    = NULL;
         int success          = 0;
 
         printf("testing: [Numbers only]\n");
         printf("str: %s\n", input);
 
-        safe_output = sanitizec_apply(input, SANITIZEC_RULE_NUMERIC_ONLY, &errmsg);
+        safe_output =
+            sanitizec_apply(input, SANITIZEC_RULE_NUMERIC_ONLY, &errmsg);
 
         if (safe_output == NULL) {
                 printf("str sanitized : (NULL)\nfailure! (Error: %s)\n",

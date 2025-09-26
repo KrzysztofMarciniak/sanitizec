@@ -3,4 +3,4 @@
 
 int run_trim_whitespace_test(void);
 
-#endif // TRIM_WHITESPACE_TEST_H
+#endif// TRIM_WHITESPACE_TEST_H
