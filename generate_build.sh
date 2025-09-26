@@ -37,10 +37,10 @@ echo "  command = \$cc \$ldflags -o \$out \$in \$libs"
 echo "  description = SHAREDLIB \$out"
 echo ""
 echo "rule link"
-echo "  command = \$cc \$in \$libs -o \$out"
+# FIX: Added -Wl,-rpath,. to embed the current directory into the executable's library search path.
+echo "  command = \$cc \$in \$libs -o \$out -Wl,-rpath,."
 echo "  description = LINK \$out"
 echo ""
-# FIX: Using backticks for the shell command inside ninja rule for better compatibility.
 echo "rule clean"
 echo "  command = rm -f \`find . -name '*.o'\` *.so test"
 echo "  description = CLEAN"
@@ -51,17 +51,8 @@ echo "# --- Object File Targets ---"
 for src in $LIB_SRCS $TEST_SRCS; do
     # Ninja needs the output object path
     obj=$(echo $src | sed 's/\.c/\.o/g')
-    # Correcting the path for the main library object if it matches the name change
-    if [ "$src" = "sanitizerc.c" ]; then
-        # Ensure we look for and build the actual source file name,
-        # which is still 'sanitizerc.c' but the library output name is 'sanitizec'
-        # To simplify, I'll rely on the object names being derived from the source file names:
-        # e.g., sanitizerc.c -> sanitizerc.o
-        obj=$(echo $src | sed 's/\.c/\.o/g')
-        echo "build $obj: cc $src"
-    else
-        echo "build $obj: cc $src"
-    fi
+    # Simplified loop, assuming source file names are correct.
+    echo "build $obj: cc $src"
 done
 
 echo ""
@@ -71,7 +62,7 @@ echo "build lib${LIB_NAME}.so: sharedlib $LIB_OBJS"
 
 echo ""
 echo "# --- Test Executable Target ---"
-# Link against libsanitizec.so
+# Link against libsanitizec.so. The RPATH flag in the 'link' rule handles runtime loading.
 echo "build test: link $TEST_OBJS lib${LIB_NAME}.so"
 
 echo ""
