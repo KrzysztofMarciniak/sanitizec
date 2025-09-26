@@ -19,7 +19,6 @@ char* lfi_apply(char* input, char** errmsg) {
                 return NULL;
         }
 
-        // Allocate an output buffer. It can be no larger than the input.
         size_t len   = strlen(input);
         char* output = (char*)malloc(len + 1);
         if (!output) {
@@ -29,37 +28,26 @@ char* lfi_apply(char* input, char** errmsg) {
                 return NULL;
         }
 
-        size_t j = 0;// index for output
+        size_t j = 0;
         for (size_t i = 0; i < len;) {
-                // 1. Check for the full traversal sequence "../" (3 characters)
                 if (i + 3 <= len && input[i] == '.' && input[i + 1] == '.' &&
                     input[i + 2] == '/') {
-                        // Skip the sequence and advance the input index by 3
                         i += 3;
                         continue;
                 }
 
-                // 2. Check for ".." (2 characters) used without a trailing
-                // slash (e.g., at the end of a path)
                 if (i + 2 <= len && input[i] == '.' && input[i + 1] == '.') {
-                        // If it's at the end, or the next char isn't a slash
-                        // (which was handled above), skip it.
                         if (i + 2 == len || input[i + 2] != '/') {
-                                // Skip the sequence and advance the input index
-                                // by 2
                                 i += 2;
                                 continue;
                         }
                 }
 
-                // If no traversal sequence is found, copy the character
                 output[j++] = input[i++];
         }
 
         output[j] = '\0';
 
-        // Free the original string as per the library's ownership transfer
-        // model
         free(input);
 
         return output;

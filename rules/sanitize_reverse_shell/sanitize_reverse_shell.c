@@ -6,7 +6,6 @@
 
 #include "../../misc/strdup_safe.h"
 
-// Structure to hold a reverse shell keyword/pattern and its length
 typedef struct {
         const char* pattern;
         size_t length;
@@ -36,13 +35,8 @@ static size_t check_for_pattern(const char* input, size_t input_len,
         for (size_t k = 0; k < PATTERN_COUNT; k++) {
                 const shell_pattern_t* pat = &patterns[k];
 
-                // 1. Check if the remaining input is long enough for the
-                // current pattern
                 if (current_pos + pat->length <= input_len) {
                         int match = 1;
-
-                        // 2. Perform comparison (case-insensitive for letters,
-                        // case-sensitive otherwise)
                         for (size_t i = 0; i < pat->length; i++) {
                                 char input_char   = input[current_pos + i];
                                 char pattern_char = pat->pattern[i];
@@ -56,23 +50,18 @@ static size_t check_for_pattern(const char* input, size_t input_len,
                                                 break;
                                         }
                                 } else {
-                                        // Non-alpha characters like '/', '&',
-                                        // '.', '*' are compared
-                                        // case-sensitively
                                         if (input_char != pattern_char) {
                                                 match = 0;
                                                 break;
                                         }
                                 }
                         }
-
-                        // 3. If a match is found, return its length
                         if (match) {
                                 return pat->length;
                         }
                 }
         }
-        return 0;// No pattern matched at this position
+        return 0;
 }
 
 /**
@@ -99,51 +88,35 @@ static size_t check_for_ip_pattern(const char* input, size_t input_len,
                 return 0;
         }
 
-        // Loop until we run out of input or break the IP pattern
         while (i < input_len) {
                 if (isdigit((unsigned char)input[i])) {
                         octet_digit_count++;
                         if (octet_digit_count >
                             3) {         // Max 3 digits per octet (e.g., 255)
                                 return 0;// Too many digits for a valid octet,
-                                         // stop matching IP here
                         }
                         i++;
                 } else if (input[i] == '.') {
-                        // Must have had at least one digit before the dot
                         if (octet_digit_count == 0) {
                                 return 0;// Dot without preceding digit
                         }
 
                         dot_count++;
-                        if (dot_count > 3) {// Max 3 dots for 4 octets
-                                break;// Stop here, but check if we successfully
-                                      // ended a pattern
+                        if (dot_count > 3) {
+                                break;
                         }
-
-                        // Reset digit counter for the next octet
                         octet_digit_count = 0;
                         i++;
                 } else {
-                        // Found a non-digit, non-dot character.
                         break;
                 }
         }
 
-        // Final validation: Must have exactly 3 dots (4 octets) and the last
-        // octet must have at least one digit. The loop breaks either on the
-        // fourth dot or on a non-dot/non-digit character. We check for the
-        // final state after the loop.
         if (dot_count == 3 && octet_digit_count > 0) {
-                // If the loop broke on a non-digit/non-dot char, 'i' is the
-                // character after the IP. If the loop broke because of
-                // `dot_count > 3` (which is now `break`), 'i' is the character
-                // after the 3rd dot. We ensure we return the length from
-                // start_pos up to the point of match (i).
                 return i - start_pos;
         }
 
-        return 0;// Not a complete IP address structure
+        return 0;
 }
 
 /**
@@ -162,8 +135,7 @@ char* reverse_shell_safe_apply(char* input, char** errmsg) {
                 return NULL;
         }
 
-        size_t len = strlen(input);
-        // Allocate an output buffer. It can be no larger than the input.
+        size_t len   = strlen(input);
         char* output = (char*)malloc(len + 1);
         if (!output) {
                 free(input);
@@ -173,33 +145,25 @@ char* reverse_shell_safe_apply(char* input, char** errmsg) {
                 return NULL;
         }
 
-        size_t j = 0;// index for output
+        size_t j = 0;
         for (size_t i = 0; i < len;) {
                 size_t skip_length = 0;
 
-                // 1. Check for fixed shell patterns
                 skip_length = check_for_pattern(input, len, i);
 
                 if (skip_length == 0) {
-                        // 2. If no fixed pattern, check for variable IP pattern
                         skip_length = check_for_ip_pattern(input, len, i);
                 }
 
                 if (skip_length > 0) {
-                        // A pattern (keyword or IP) was matched. Skip it
-                        // entirely.
                         i += skip_length;
                 } else {
-                        // No pattern matched. Copy the character and advance
-                        // both indices.
                         output[j++] = input[i++];
                 }
         }
 
         output[j] = '\0';
 
-        // Free the original string as per the library's ownership transfer
-        // model
         free(input);
 
         return output;

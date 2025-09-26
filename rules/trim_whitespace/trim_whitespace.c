@@ -16,19 +16,16 @@ char* trim_whitespace_apply(char* input, char** errmsg) {
                 return NULL;
         }
 
-        // Find start of non-whitespace
         char* start = input;
         while (*start && isspace((unsigned char)*start)) {
                 start++;
         }
 
-        // If string is entirely whitespace
         if (*start == '\0') {
                 free(input);
-                return strdup_safe("");// Return empty string
+                return strdup_safe("");
         }
 
-        // Find end of non-whitespace
         char* end = input + strlen(input) - 1;
         while (end > start && isspace((unsigned char)*end)) {
                 end--;

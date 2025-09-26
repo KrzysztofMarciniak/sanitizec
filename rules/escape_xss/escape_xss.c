@@ -14,7 +14,6 @@
  * @return char* A new, escaped, dynamically allocated string.
  */
 char* escape_xss_apply(char* input, char** errmsg) {
-        // Clear any previous error state
         if (errmsg) *errmsg = NULL;
 
         if (!input) {
@@ -28,7 +27,6 @@ char* escape_xss_apply(char* input, char** errmsg) {
         size_t new_len = 0;
         size_t i, j = 0;
 
-        // --- 1. Calculate new required length ---
         for (i = 0; i < len; i++) {
                 switch (input[i]) {
                         case '&':// becomes &amp; (5 chars, +4)
@@ -50,16 +48,13 @@ char* escape_xss_apply(char* input, char** errmsg) {
                 }
         }
 
-        // Optimization: if no escaping is needed, return original input
         if (new_len == len) {
-                return input;// No change, return original string
+                return input;
         }
 
-        // --- 2. Allocate new buffer ---
-        char* new_string = (char*)malloc(new_len + 1);// +1 for null terminator
+        char* new_string = (char*)malloc(new_len + 1);
         if (!new_string) {
-                free(input);// Free the original string since we failed to
-                            // allocate the new one
+                free(input);
                 if (errmsg)
                         *errmsg = strdup_safe(
                             "XSS Escape Rule: Memory allocation failed for "
@@ -67,7 +62,6 @@ char* escape_xss_apply(char* input, char** errmsg) {
                 return NULL;
         }
 
-        // --- 3. Copy and Escape ---
         for (i = 0; i < len; i++) {
                 switch (input[i]) {
                         case '&':
@@ -96,9 +90,8 @@ char* escape_xss_apply(char* input, char** errmsg) {
                 }
         }
 
-        new_string[new_len] = '\0';// Null-terminate the new string
+        new_string[new_len] = '\0';
 
-        // --- 4. Cleanup and Return ---
-        free(input);// Free the original input string
+        free(input);
         return new_string;
 }
