@@ -4,33 +4,29 @@
 #include <string.h>
 
 int main() {
-    const char* test_input_1 = "<h1>Hello, World! <script>bad()</script></h1>";
-    const char* test_input_2 = "SELECT * FROM users WHERE name='O\'Malley';";
+    // Input containing HTML tags, XSS payload, quotes, and ampersands
+    const char* test_input_1 = "User Input: <script>alert('Hello & World!')</script> and \"quotes\"";
+    char *errmsg = NULL;
+    char *safe_output = NULL;
 
-    printf("--- sanitizerc Test Program ---\n\n");
+    printf("--- SanitizeC Test Program (XSS Escape Only) ---\n\n");
+    printf("Input: %s\n", test_input_1);
 
-    // Test 1: Web Safe Ruleset
-    printf("Input 1 (Web): %s\n", test_input_1);
-    char* safe_web = sanitizec_apply(test_input_1, SANITIZEC_RULESET_WEB_SAFE);
+    // Apply the only implemented rule: SANITIZEC_RULE_XSS_ESCAPE
+    safe_output = sanitizec_apply(test_input_1, SANITIZEC_RULE_XSS_ESCAPE, &errmsg);
 
-    if (safe_web) {
-        printf("Output 1 (Web): %s\n", safe_web);
-        free(safe_web);
+    if (safe_output) {
+        printf("Output: %s\n", safe_output);
+        free(safe_output);
     } else {
-        fprintf(stderr, "Test 1 failed to allocate memory.\n");
-    }
-
-    printf("\n");
-
-    // Test 2: DB Safe Ruleset
-    printf("Input 2 (DB): %s\n", test_input_2);
-    char* safe_db = sanitizec_apply(test_input_2, SANITIZEC_RULESET_DB_SAFE);
-
-    if (safe_db) {
-        printf("Output 2 (DB): %s\n", safe_db);
-        free(safe_db);
-    } else {
-        fprintf(stderr, "Test 2 failed to allocate memory.\n");
+        // If sanitizec_apply fails, check and report the error message
+        fprintf(stderr, "Sanitization failed!\n");
+        if (errmsg) {
+            fprintf(stderr, "Error Message: %s\n", errmsg);
+            free(errmsg); // Free the allocated error string
+        } else {
+            fprintf(stderr, "Error Message: Unknown failure (returned NULL without setting errmsg).\n");
+        }
     }
 
     printf("\n--- Test complete ---\n");

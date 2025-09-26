@@ -1,25 +1,24 @@
-#ifndef SANITIZEC_H // Updated header guard
+#ifndef SANITIZEC_H
 #define SANITIZEC_H
 
-#include <stddef.h>
+// --- Rule Definitions ---
+// Define rule bitmasks for the sole XSS rule
+#define SANITIZEC_RULE_NONE         0
+#define SANITIZEC_RULE_XSS_ESCAPE   (1 << 0) // Handles '<', '>', '&', '"', "'"
 
-// Built-in Rules
-#define SANITIZEC_RULE_HTML_ESCAPE 0x01 // Updated macro prefix
-#define SANITIZEC_RULE_SQL_ESCAPE 0x02
-#define SANITIZEC_RULE_URL_ENCODE 0x04
-// Reserve 0x08, 0x10, etc., for future individual rules
-
-// Built-in Rulesets (combinations of rules)
-#define SANITIZEC_RULESET_WEB_SAFE (SANITIZEC_RULE_HTML_ESCAPE | SANITIZEC_RULE_URL_ENCODE) // Updated macro prefix
-#define SANITIZEC_RULESET_DB_SAFE (SANITIZEC_RULE_SQL_ESCAPE)
+// --- Function Prototypes ---
 
 /**
- * @brief Applies the specified ruleset to an input string.
- * * @param input The null-terminated string to be sanitized.
- * @param ruleset A bitmask of rules to apply (e.g., SANITIZEC_RULESET_WEB_SAFE).
- * @return A newly allocated, null-terminated string containing the sanitized content,
- * or NULL on failure. The caller is responsible for freeing the returned string.
+ * @brief Applies XSS escaping to an input string synchronously.
+ * This is a stateless operation.
+ *
+ * @param input The original string to sanitize (will not be modified).
+ * @param ruleset A bitmask of SANITIZEC_RULE_X flags indicating which rules to apply.
+ * @param errmsg A pointer to a char* which will be set to a dynamically allocated
+ * error message on failure, or NULL on success. Caller must free if set.
+ * @return char* A new, dynamically allocated sanitized string, or NULL on error or if input is NULL.
+ * The caller is responsible for freeing the returned string.
  */
-char* sanitizec_apply(const char* input, int ruleset); // Updated function name
+char* sanitizec_apply(const char* input, int ruleset, char **errmsg);
 
 #endif // SANITIZEC_H
