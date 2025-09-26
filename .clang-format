@@ -1,6 +1,6 @@
 BasedOnStyle: Google
 IndentWidth: 8
-ColumnLimit: 100
+ColumnLimit: 80
 SpaceBeforeParens: ControlStatements
 SpacesInParentheses: false
 AlignConsecutiveAssignments: true
@@ -9,3 +9,8 @@ SortIncludes: true
 SpacesBeforeTrailingComments: 0
 AlwaysBreakTemplateDeclarations: false
 SpaceAfterCStyleCast: false
+
+DerivePointerAlignment: false
+PointerAlignment: Left
+SeparateDefinitionBlocks: Always
+UseTab: Never

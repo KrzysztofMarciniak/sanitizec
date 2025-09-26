@@ -5,11 +5,13 @@
 #include "tests/alphanumeric_only/alphanumeric_only.h"
 #include "tests/escape_xss/escape_xss.h"
 #include "tests/numeric_only/numeric_only.h"
+#include "tests/sanitize_lfi/sanitize_lfi.h"
 #include "tests/trim_whitespace/trim_whitespace.h"
 
 /**
  * @brief Main test manager entry point.
- * * Runs all defined test functions and reports the final count of failures.
+ * * Runs all defined test functions and reports the final count of
+ * failures.
  */
 int main(void) {
         int number_failed = 0;
@@ -19,7 +21,8 @@ int main(void) {
 
         // --- Run Test Suite 1: XSS Escape ---
         total_tests++;
-        if (run_xss_escape_test() == 0) {// run_xss_escape_test returns 0 on failure
+        if (run_xss_escape_test() ==
+            0) {// run_xss_escape_test returns 0 on failure
                 number_failed++;
         }
         // --- Run Test Suite 2: Trim Whitespace ---
@@ -35,8 +38,13 @@ int main(void) {
         if (run_numeric_only_test() == 0) {
                 number_failed++;
         }
+
         total_tests++;
         if (run_alphanumeric_only_test() == 0) {
+                number_failed++;
+        }
+        total_tests++;
+        if (run_lfi_test() == 0) {
                 number_failed++;
         }
 
