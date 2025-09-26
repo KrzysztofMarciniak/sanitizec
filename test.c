@@ -1,34 +1,38 @@
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 // Include the header for your plain C test function
 #include "tests/escape_xss/escape_xss.h"
+#include "tests/trim_whitespace/trim_whitespace.h"
 
 /**
  * @brief Main test manager entry point.
  * * Runs all defined test functions and reports the final count of failures.
  */
-int main(void)
-{
-    int number_failed = 0;
-    int total_tests = 0;
+int main(void) {
+        int number_failed = 0;
+        int total_tests   = 0;
 
-    printf("--- Starting SanitizeC Test Manager ---\n\n");
+        printf("--- Starting SanitizeC Test Manager ---\n\n");
 
-    // --- Run Test Suite 1: XSS Escape ---
-    total_tests++;
-    if (run_xss_escape_test() == 0) { // run_xss_escape_test returns 0 on failure
-        number_failed++;
-    }
+        // --- Run Test Suite 1: XSS Escape ---
+        total_tests++;
+        if (run_xss_escape_test() == 0) {// run_xss_escape_test returns 0 on failure
+                number_failed++;
+        }
+        // --- Run Test Suite 2: Trim Whitespace ---
+        total_tests++;
+        if (run_trim_whitespace_test() == 0) {
+                number_failed++;
+        }
 
-    // Add more test suite calls here as you develop them...
-    // total_tests++;
-    // if (run_another_test() == 0) { number_failed++; }
+        // Add more test suite calls here as you develop them...
+        // total_tests++;
+        // if (run_another_test() == 0) { number_failed++; }
 
+        printf("\n--- Test Manager Complete ---\n");
+        printf("Total test modules run: %d\n", total_tests);
+        printf("Total test modules failed: %d\n", number_failed);
 
-    printf("\n--- Test Manager Complete ---\n");
-    printf("Total test modules run: %d\n", total_tests);
-    printf("Total test modules failed: %d\n", number_failed);
-
-    // Return the number of failed tests as the exit code
-    return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
+        // Return the number of failed tests as the exit code
+        return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

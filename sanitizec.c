@@ -1,5 +1,6 @@
 #include "sanitizec.h"
 #include "rules/escape_xss/escape_xss.h"
+#include "rules/trim_whitespace/trim_whitespace.h"
 #include <stdlib.h>
 #include <string.h>
 #include "misc/strdup_safe.h"
@@ -21,6 +22,7 @@ typedef struct {
 static const rule_map_t rules_map[] = {
     // Rule Flag                     // Function Pointer             // Rule Name
     { SANITIZEC_RULE_XSS_ESCAPE,     escape_xss_apply,              "XSS Escape Rule" },
+    { SANITIZEC_RULE_WHITESPACE_TRIM,   trim_whitespace_apply,              "Trim Whitespace Rule" },
     { 0,                             NULL,                          NULL } // Sentinel
 };
 

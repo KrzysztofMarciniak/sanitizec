@@ -5,6 +5,7 @@
 // Define rule bitmasks for the sole XSS rule
 #define SANITIZEC_RULE_NONE         0
 #define SANITIZEC_RULE_XSS_ESCAPE   (1 << 0) // Handles '<', '>', '&', '"', "'"
+#define SANITIZEC_RULE_WHITESPACE_TRIM (1 <<1 )
 
 // --- Function Prototypes ---
 
