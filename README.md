@@ -12,7 +12,7 @@ A small, ruled based, minimal C library for string sanitization in web developme
 | **Numeric Only** | `SANITIZEC_RULE_NUMERIC_ONLY` | Filters out all characters that are not numeric digits (0-9). | `"Price: $12.50"` becomes `"1250"` |
 | **Alphanumeric Only** | `SANITIZEC_RULE_ALPHANUMERIC_ONLY` | Filters out all characters that are not alphanumeric (A-Z, a-z, 0-9). | `"User-Name: JohnDoe_123!"` becomes `"UserNameJohnDoe123"` |
 | **LFI** | `SANITIZEC_RULE_LFI` | Removes `../` and `..` to prevent directory traversal in file paths. | `"/etc/passwd"` becomes `"/etc/passwd"` but `"../../etc/passwd"` becomes `"/etc/passwd"` |
-| **SQL** | `SANITIZEC_RULE_SQL` | Removes common SQL keywords to mitigate SQL injection attacks. | `"1 OR 1=1; --"` becomes `"1 "` |
+| **SQL** | `SANITIZEC_RULE_SQL` | Removes common SQL keywords to mitigate SQL injection attacks. | `"1 OR 1=1; --"` becomes `"1 OR ; --"` |
 | **Reverse Shell** | `SANITIZEC_RULE_REVERSE_SHELL` | Removes keywords associated with reverse shell commands. | `"; nc 127.0.0.1 4444 -e /bin/sh"` becomes `"; 127.0.0.1 4444 /bin/sh"` |
 
 
