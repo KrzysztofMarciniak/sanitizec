@@ -11,6 +11,7 @@
 #define SANITIZEC_RULE_ALPHANUMERIC_ONLY (1 << 4)
 #define SANITIZEC_RULE_LFI (1 << 5)
 #define SANITIZEC_RULE_SQL (1 << 6)
+#define SANITIZEC_RULE_REVERSE_SHELL (1 << 7)
 // --- Function Prototypes ---
 
 /**

@@ -6,6 +6,7 @@
 #include "tests/escape_xss/escape_xss.h"
 #include "tests/numeric_only/numeric_only.h"
 #include "tests/sanitize_lfi/sanitize_lfi.h"
+#include "tests/sanitize_reverse_shell/sanitize_reverse_shell.h"
 #include "tests/sanitize_sql/sanitize_sql.h"
 #include "tests/trim_whitespace/trim_whitespace.h"
 
@@ -51,7 +52,10 @@ int main(void) {
         if (run_sql_safe_test() == 0) {
                 number_failed++;
         }
-
+        total_tests++;
+        if (run_reverse_shell_safe_test() == 0) {
+                number_failed++;
+        }
         // Add more test suite calls here as you develop them...
         // total_tests++;
         // if (run_another_test() == 0) { number_failed++; }
