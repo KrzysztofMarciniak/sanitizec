@@ -51,5 +51,5 @@ sudo ./install.sh
 
 Note: If successful, the library will be installed as /usr/local/lib/libsanitizec.so and the header as /usr/local/include/sanitizec.h.
 
-#### Usage...
 
+#### Usage...

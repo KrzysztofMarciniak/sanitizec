@@ -7,12 +7,18 @@
 #include "sanitizec.h"
 
 /**
- * @brief Runs the Local File Inclusion (LFI) test case using sanitizec_apply.
- * @return 1 on success, 0 on failure.
+ * @brief Conducts Local File Inclusion (LFI) sanitization test.
+ *
+ * This test validates the sanitization library's ability to:
+ * - Remove directory traversal attempts (../)
+ * - Prevent potential path manipulation attacks
+ * - Sanitize file path inputs to mitigate LFI vulnerabilities
+ *
+ * @return int 1 if sanitization test passes, 0 if it fails
  */
 int run_lfi_test(void) {
         const char* input    = "/etc/passwd/../../../../tmp/file.log";
-        const char* expected = "/etc/passwd/tmp/file.log";// All "../" removed
+        const char* expected = "/etc/passwd/tmp/file.log";
         char* errmsg         = NULL;
         char* safe_output    = NULL;
         int success          = 0;
@@ -20,10 +26,6 @@ int run_lfi_test(void) {
         printf("testing: [Local File Inclusion (LFI) Filter]\n");
         printf("str: %s\n", input);
 
-        // Assuming SANITIZEC_RULE_LFI is defined in sanitizec.h
-        // The actual constant value will depend on your enum definition.
-        // For this example, we assume it's the next rule constant available.
-        // NOTE: Replace SANITIZEC_RULE_LFI with the actual enum value if known.
         safe_output = sanitizec_apply(input, SANITIZEC_RULE_LFI, &errmsg);
 
         if (safe_output == NULL) {

@@ -7,8 +7,14 @@
 #include "sanitizec.h"
 
 /**
- * @brief Runs the numbers only test case using sanitizec_apply.
- * @return 1 on success, 0 on failure.
+ * @brief Conducts numeric characters sanitization test.
+ *
+ * This test validates the sanitization library's ability to:
+ * - Remove non-numeric characters
+ * - Preserve only numerical digits
+ * - Handle mixed input with letters, punctuation, and spaces
+ *
+ * @return int 1 if sanitization test passes, 0 if it fails
  */
 int run_numeric_only_test(void) {
         const char* input    = "Account Number: 123-ABC-456-XYZ";

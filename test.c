@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-// Include the header for your plain C test function
+
 #include "tests/alpha_only/alpha_only.h"
 #include "tests/alphanumeric_only/alphanumeric_only.h"
 #include "tests/escape_xss/escape_xss.h"
@@ -12,7 +12,7 @@
 
 /**
  * @brief Main test manager entry point.
- * * Runs all defined test functions and reports the final count of
+ * Runs all defined test functions and reports the final count of
  * failures.
  */
 int main(void) {
@@ -21,49 +21,49 @@ int main(void) {
 
         printf("--- Starting SanitizeC Test Manager ---\n\n");
 
-        // --- Run Test Suite 1: XSS Escape ---
         total_tests++;
-        if (run_xss_escape_test() ==
-            0) {// run_xss_escape_test returns 0 on failure
+        if (run_xss_escape_test() == 0) {
                 number_failed++;
         }
-        // --- Run Test Suite 2: Trim Whitespace ---
+
         total_tests++;
         if (run_trim_whitespace_test() == 0) {
                 number_failed++;
         }
+
         total_tests++;
         if (run_alpha_only_test() == 0) {
                 number_failed++;
         }
+
         total_tests++;
         if (run_numeric_only_test() == 0) {
                 number_failed++;
         }
+
         total_tests++;
         if (run_alphanumeric_only_test() == 0) {
                 number_failed++;
         }
+
         total_tests++;
         if (run_lfi_test() == 0) {
                 number_failed++;
         }
+
         total_tests++;
         if (run_sql_safe_test() == 0) {
                 number_failed++;
         }
+
         total_tests++;
         if (run_reverse_shell_safe_test() == 0) {
                 number_failed++;
         }
-        // Add more test suite calls here as you develop them...
-        // total_tests++;
-        // if (run_another_test() == 0) { number_failed++; }
 
         printf("\n--- Test Manager Complete ---\n");
         printf("Total test modules run: %d\n", total_tests);
         printf("Total test modules failed: %d\n", number_failed);
 
-        // Return the number of failed tests as the exit code
         return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

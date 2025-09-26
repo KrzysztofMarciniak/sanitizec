@@ -1,15 +1,20 @@
-#include "trim_whitespace.h"// declares run_trim_whitespace_test
+#include "trim_whitespace.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "sanitizec.h"// your main sanitization dispatcher
+#include "sanitizec.h"
 
 /**
- * @brief Runs the whitespace trimming test case.
- * * Compares the output of sanitizec_apply against a known correct output.
- * * @return 1 on success, 0 on failure.
+ * @brief Conducts whitespace trimming sanitization test.
+ *
+ * This test validates the sanitization library's ability to:
+ * - Remove leading and trailing whitespace
+ * - Handle multiple types of whitespace characters
+ * - Preserve the core string content
+ *
+ * @return int 1 if sanitization test passes, 0 if it fails
  */
 int run_trim_whitespace_test(void) {
         const char* input    = "  \t  Hello, World!  \n\n ";

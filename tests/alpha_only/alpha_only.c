@@ -7,8 +7,14 @@
 #include "sanitizec.h"
 
 /**
- * @brief Runs the alphabetic letters only test case using sanitizec_apply.
- * @return 1 on success, 0 on failure.
+ * @brief Conducts alphabetic characters sanitization test.
+ *
+ * This test validates the sanitization library's ability to:
+ * - Remove non-alphabetic characters
+ * - Preserve only letters (both uppercase and lowercase)
+ * - Handle mixed input with numbers, punctuation, and emojis
+ *
+ * @return int 1 if sanitization test passes, 0 if it fails
  */
 int run_alpha_only_test(void) {
         const char* input    = "Hello World! 123 is a great 😃day.";

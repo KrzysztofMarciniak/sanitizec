@@ -2,15 +2,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../sanitizec.h"// Assuming the main header file is one level up
+#include "../sanitizec.h"
 
 /**
- * @brief Runs the SQL Safe test case using sanitizec_apply.
- * @return 1 on success, 0 on failure.
+ * @brief Conducts comprehensive SQL injection sanitization test.
+ *
+ * This test validates the sanitization library's ability to:
+ * - Remove SQL injection keywords and patterns
+ * - Handle mixed-case SQL injection attempts
+ * - Strip potentially dangerous SQL commands
+ *
+ * @return int 1 if all sanitization tests pass, 0 if any test fails
  */
 int run_sql_safe_test(void) {
-        // Test case combining all keywords (DML, PRAGMA, 1=1, SLEEP, CONCAT) in
-        // mixed case.
         const char* input =
             "ID' OR 1=1 --;"
             "DROPtable; "
@@ -21,17 +25,15 @@ int run_sql_safe_test(void) {
             "DELEte from logs;"
             "Concat(A, B)";
 
-        // All keywords (1=1, DROP, UNION, SELECT, PRAGMA, SLEEP, UPDATE,
-        // DELETE, CONCAT) are removed.
         const char* expected =
-            "ID' OR  --;"          // 1=1 removed
-            "table; "              // DROP removed
-            "  * from t;"          // UNION, SELECT removed
-            " foreign_keys;"       // PRAGMA removed
-            "Wait and (5) seconds;"// SLEEP removed
-            " users;"              // UPDATE removed
-            " from logs;"          // DELETE removed
-            "(A, B)";              // CONCAT removed
+            "ID' OR  --;"
+            "table; "
+            "  * from t;"
+            " foreign_keys;"
+            "Wait and (5) seconds;"
+            " users;"
+            " from logs;"
+            "(A, B)";
 
         char* errmsg      = NULL;
         char* safe_output = NULL;
@@ -40,9 +42,6 @@ int run_sql_safe_test(void) {
         printf("testing: [SQL Safe Filter - Command Removal]\n");
         printf("str: %s\n", input);
 
-        // Assuming SANITIZEC_RULE_SQL_SAFE is defined in sanitizec.h
-        // NOTE: You must use the actual enum constant for this rule in your
-        // setup.
         safe_output = sanitizec_apply(input, SANITIZEC_RULE_SQL, &errmsg);
 
         if (safe_output == NULL) {

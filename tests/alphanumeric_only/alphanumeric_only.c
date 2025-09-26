@@ -7,8 +7,14 @@
 #include "sanitizec.h"
 
 /**
- * @brief Runs the letters and numbers only test case using sanitizec_apply.
- * @return 1 on success, 0 on failure.
+ * @brief Conducts alphanumeric sanitization test.
+ *
+ * This test validates the sanitization library's ability to:
+ * - Remove non-alphanumeric characters
+ * - Preserve letters and numbers
+ * - Handle mixed input with special characters, spaces, and punctuation
+ *
+ * @return int 1 if sanitization test passes, 0 if it fails
  */
 int run_alphanumeric_only_test(void) {
         const char* input    = "User-Name: JohnDoe_123!";
