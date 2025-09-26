@@ -1,0 +1,38 @@
+cc = cc
+ranlib = ranlib
+
+# Compiler flags: -I. for main headers, -fPIC for shared library, -Wall/-Wextra for quality
+cflags = -I. -I./rules -fPIC -Wall -Wextra
+ldflags = -shared
+libs = 
+
+rule cc
+  command = $cc $cflags -c $in -o $out
+  description = CC $in
+
+rule sharedlib
+  command = $cc $ldflags -o $out $in $libs
+  description = SHAREDLIB $out
+
+rule link
+  command = $cc $in $libs -o $out
+  description = LINK $out
+
+rule clean
+  command = rm -f `find . -name '*.o'` *.so test
+  description = CLEAN
+
+# --- Object File Targets ---
+build rules/escape_html/escape_html.o: cc rules/escape_html/escape_html.c
+build sanitizec.o: cc sanitizec.c
+build test.o: cc test.c
+
+# --- Library Target ---
+build libsanitizec.so: sharedlib rules/escape_html/escape_html.o sanitizec.o
+
+# --- Test Executable Target ---
+build test: link test.o libsanitizec.so
+
+# --- Default and Utility Targets ---
+default libsanitizec.so
+build clean: clean
