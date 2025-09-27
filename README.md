@@ -1,5 +1,7 @@
 # sanitizec
 
+<img width="250" height="250" alt="sanitizeC" src="https://github.com/user-attachments/assets/ecbd6a93-94dc-4f54-bb35-5d3eda3bf70b" />
+
 A minimal, rule-based C library for string sanitization in web development, designed for high performance and flexibility for C developers.
 
 ---
