@@ -1,4 +1,7 @@
-# sanitizec
+login.c:32: warning: assignment makes pointer from integer without a cast
+login.c:32: warning: cast between pointer and integer of different size
+login.c:32: error: too few arguments to function
+ninja: job failed: tcc -L./ register.c lib/csrf/csrf.c lib/dal/u# sanitizec
 
 A minimal, rule-based C library for string sanitization in web development, designed for high performance and flexibility for C developers.
 
@@ -26,6 +29,7 @@ A minimal, rule-based C library for string sanitization in web development, desi
 | **SQL**              | `SANITIZEC_RULE_SQL`         | Removes common SQL keywords to mitigate SQL injection attacks.                               | `"1 OR 1=1; --"` → `"1 OR ; --"`          |
 | **Reverse Shell**    | `SANITIZEC_RULE_REVERSE_SHELL`| Removes keywords associated with reverse shell commands.                                    | `"; nc 127.0.0.1 4444 -e /bin/sh"` → `";  4444 -e bin"` |
 | **Alphanumeric w/ Spaces** | `SANITIZEC_RULE_ALPHANUMERIC_WITH_SPACES_ONLY` | Alphanumeric but with spaces. | `"; Hello World$123!"` → `" Hello World123"` |
+| **Hex Only** | `SANITIZEC_RULE_HEX_ONLY` | hex letters only | `"DE-AD-BE-EF! xyz@123"` → `"DEADBEEF123"` |
 
 
 ---
