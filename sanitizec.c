@@ -9,6 +9,7 @@
 #include "rules/alphanumeric_only/alphanumeric_only.h"
 #include "rules/alphanumeric_with_spaces_only/alphanumeric_with_spaces_only.h"
 #include "rules/escape_xss/escape_xss.h"
+#include "rules/hex_only/hex_only.h"
 #include "rules/numeric_only/numeric_only.h"
 #include "rules/sanitize_lfi/sanitize_lfi.h"
 #include "rules/sanitize_reverse_shell/sanitize_reverse_shell.h"
@@ -33,6 +34,7 @@ static const rule_map_t rules_map[] = {
      "Letters and Numbers only"},
     {SANITIZEC_RULE_LFI, lfi_apply, "Remove ../ and .."},
     {SANITIZEC_RULE_SQL, sql_safe_apply, "Remove sql keywords."},
+    {SANITIZEC_RULE_HEX_ONLY, hex_only_apply, "hex only, good for csrf etc."},
     {SANITIZEC_RULE_ALPHANUMERIC_WITH_SPACES_ONLY,
      alphanumeric_with_spaces_apply, "Alphanumeric but with spaces."},
     {SANITIZEC_RULE_REVERSE_SHELL, reverse_shell_safe_apply,

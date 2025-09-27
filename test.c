@@ -5,6 +5,7 @@
 #include "tests/alphanumeric_only/alphanumeric_only.h"
 #include "tests/alphanumeric_with_spaces_only/alphanumeric_with_spaces_only.h"
 #include "tests/escape_xss/escape_xss.h"
+#include "tests/hex_only/hex_only.h"
 #include "tests/numeric_only/numeric_only.h"
 #include "tests/sanitize_lfi/sanitize_lfi.h"
 #include "tests/sanitize_reverse_shell/sanitize_reverse_shell.h"
@@ -65,7 +66,10 @@ int main(void) {
         if (run_alphanumeric_with_spaces_test() == 0) {
                 number_failed++;
         }
-
+        total_tests++;
+        if (run_hex_only_test() == 0) {
+                number_failed++;
+        }
         printf("\n--- Test Manager Complete ---\n");
         printf("Total test modules run: %d\n", total_tests);
         printf("Total test modules failed: %d\n", number_failed);
