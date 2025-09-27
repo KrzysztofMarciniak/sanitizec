@@ -25,6 +25,8 @@ A minimal, rule-based C library for string sanitization in web development, desi
 | **LFI**              | `SANITIZEC_RULE_LFI`         | Removes `../` and `..` to prevent directory traversal in file paths.                         | `"../../etc/passwd"` → `"/etc/passwd"`   |
 | **SQL**              | `SANITIZEC_RULE_SQL`         | Removes common SQL keywords to mitigate SQL injection attacks.                               | `"1 OR 1=1; --"` → `"1 OR ; --"`          |
 | **Reverse Shell**    | `SANITIZEC_RULE_REVERSE_SHELL`| Removes keywords associated with reverse shell commands.                                    | `"; nc 127.0.0.1 4444 -e /bin/sh"` → `";  4444 -e bin"` |
+| **Alphanumeric w/ Spaces** | `SANITIZEC_RULE_ALPHANUMERIC_WITH_SPACES_ONLY` | Alphanumeric but with spaces. | `"; Hello World$123!"` → `" Hello World123"` |
+
 
 ---
 
