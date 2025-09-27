@@ -7,6 +7,7 @@
 #include "misc/strdup_safe.h"
 #include "rules/alpha_only/alpha_only.h"
 #include "rules/alphanumeric_only/alphanumeric_only.h"
+#include "rules/alphanumeric_with_spaces_only/alphanumeric_with_spaces_only.h"
 #include "rules/escape_xss/escape_xss.h"
 #include "rules/numeric_only/numeric_only.h"
 #include "rules/sanitize_lfi/sanitize_lfi.h"
@@ -32,6 +33,8 @@ static const rule_map_t rules_map[] = {
      "Letters and Numbers only"},
     {SANITIZEC_RULE_LFI, lfi_apply, "Remove ../ and .."},
     {SANITIZEC_RULE_SQL, sql_safe_apply, "Remove sql keywords."},
+    {SANITIZEC_RULE_ALPHANUMERIC_WITH_SPACES_ONLY,
+     alphanumeric_with_spaces_apply, "Alphanumeric but with spaces."},
     {SANITIZEC_RULE_REVERSE_SHELL, reverse_shell_safe_apply,
      "Remove reverse shell keywords."},
     {0, NULL, NULL}};

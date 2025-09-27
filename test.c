@@ -3,6 +3,7 @@
 
 #include "tests/alpha_only/alpha_only.h"
 #include "tests/alphanumeric_only/alphanumeric_only.h"
+#include "tests/alphanumeric_with_spaces_only/alphanumeric_with_spaces_only.h"
 #include "tests/escape_xss/escape_xss.h"
 #include "tests/numeric_only/numeric_only.h"
 #include "tests/sanitize_lfi/sanitize_lfi.h"
@@ -58,6 +59,10 @@ int main(void) {
 
         total_tests++;
         if (run_reverse_shell_safe_test() == 0) {
+                number_failed++;
+        }
+        total_tests++;
+        if (run_alphanumeric_with_spaces_test() == 0) {
                 number_failed++;
         }
 

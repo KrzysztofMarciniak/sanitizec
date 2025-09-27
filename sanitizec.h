@@ -10,6 +10,7 @@
 #define SANITIZEC_RULE_LFI (1 << 5)
 #define SANITIZEC_RULE_SQL (1 << 6)
 #define SANITIZEC_RULE_REVERSE_SHELL (1 << 7)
+#define SANITIZEC_RULE_ALPHANUMERIC_WITH_SPACES_ONLY (1 << 8)
 
 /**
  * @brief Applies sanitization rules to an input string.
