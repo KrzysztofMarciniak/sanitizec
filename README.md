@@ -1,7 +1,4 @@
-login.c:32: warning: assignment makes pointer from integer without a cast
-login.c:32: warning: cast between pointer and integer of different size
-login.c:32: error: too few arguments to function
-ninja: job failed: tcc -L./ register.c lib/csrf/csrf.c lib/dal/u# sanitizec
+# sanitizec
 
 A minimal, rule-based C library for string sanitization in web development, designed for high performance and flexibility for C developers.
 
