@@ -6,6 +6,10 @@ A minimal, rule-based C library for string sanitization in web development, desi
 
 ---
 
+## Integration Example
+
+**An example usage of this tool:** [example-login-c-stack](https://github.com/KrzysztofMarciniak/example-login-c-stack).
+
 ## Features
 
 - Lightweight and easy to integrate
