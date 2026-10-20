@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../sanitizec.h"
+#include "../../sanitizec.h"
 
 /**
  * @brief Conducts comprehensive SQL injection sanitization test.

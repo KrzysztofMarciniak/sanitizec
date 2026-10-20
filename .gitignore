@@ -1,4 +1,6 @@
 *o
 test
+test-runner
 .ninja_log
+.ninja_deps
 build.ninja

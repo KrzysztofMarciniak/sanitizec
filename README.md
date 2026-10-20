@@ -42,44 +42,44 @@ A minimal, rule-based C library for string sanitization in web development, desi
 ### Prerequisites
 
 - C compiler (e.g., GCC or Clang)
-- Ninja build system installed
+- GNU Make or Ninja installed
 
 ---
 
 ### Build Steps
 
-1. **Generate the build file:**
+Choose either build system.
 
-    ```sh
-    chmod +x generate_build.sh
-    ./generate_build.sh
-    ```
+**GNU Make:**
 
-2. **Compile the library:**
+```sh
+make
+make test
+make check
+```
 
-    ```sh
-    ninja
-    ```
+`make test` builds the test runner; `make check` builds and runs it.
 
-3. **Build and run tests:**
+**Ninja:**
 
-    ```sh
-    ninja test
-    ./test
-    ```
+```sh
+./generate_build.sh
+ninja
+ninja test
+./test
+```
 
 ---
 
 ### Installation
 
-To install the library and headers system-wide (e.g., `/usr/local/lib` and `/usr/local/include`):
+To install the library and header system-wide (e.g., `/usr/local/lib` and `/usr/local/include`):
 
 ```sh
-chmod +x install.sh
-sudo ./install.sh
-
+sudo make install
 ```
 
+Set `PREFIX` to change the installation prefix, or `DESTDIR` to stage an installation.
 
 #### Example Usage
 
@@ -109,4 +109,3 @@ int main() {
 }
 
 ```
-
