@@ -47,86 +47,79 @@ static char* make_large_key(size_t size, char prefix) {
 }
 
 int run_sanitizec_cache_test(void) {
-        int success     = 0;
-        char* first     = NULL;
-        char* second    = NULL;
-        char* third     = NULL;
-        char* oversized = NULL;
-        char* output    = NULL;
+        enum { CACHE_TEST_ENTRIES = 200, CACHE_TEST_KEY_BYTES = 4000 };
+
+        int success                    = 0;
+        char* keys[CACHE_TEST_ENTRIES] = {0};
+        char* oversized                = NULL;
+        char* output                   = NULL;
         pthread_t threads[CACHE_TEST_THREADS];
         worker_args_t args[CACHE_TEST_THREADS];
         int threads_started = 0;
 
         printf("testing: [Sanitize cache]\n");
 
-        sanitizec_cache_store("cache-test-hit", 101, "cached result");
-        output = sanitizec_cache_get("cache-test-hit", 101);
+        sanitizec_cache_store("cache-test-hit", sizeof("cache-test-hit") - 1,
+                              101, "cached result",
+                              sizeof("cached result") - 1);
+        output = sanitizec_cache_get("cache-test-hit",
+                                     sizeof("cache-test-hit") - 1, 101);
         if (!output || strcmp(output, "cached result") != 0) {
                 fprintf(stderr, "Test FAILED: Cache hit/miss behavior.\n");
                 goto cleanup;
         }
         free(output);
         output = NULL;
-        output = sanitizec_cache_get("cache-test-miss", 101);
+        output = sanitizec_cache_get("cache-test-miss",
+                                     sizeof("cache-test-miss") - 1, 101);
         if (output != NULL) {
                 fprintf(stderr, "Test FAILED: Cache miss behavior.\n");
                 goto cleanup;
         }
 
-        first  = make_large_key(400 * 1024, '1');
-        second = make_large_key(400 * 1024, '2');
-        third  = make_large_key(400 * 1024, '3');
-        if (!first || !second || !third) {
-                fprintf(stderr,
-                        "Test FAILED: Could not allocate cache keys.\n");
-                goto cleanup;
+        for (int i = 0; i < CACHE_TEST_ENTRIES; i++) {
+                keys[i] = make_large_key(CACHE_TEST_KEY_BYTES, (char)(i + 1));
+                if (!keys[i]) {
+                        fprintf(
+                            stderr,
+                            "Test FAILED: Could not allocate cache keys.\n");
+                        goto cleanup;
+                }
+                sanitizec_cache_store(keys[i], CACHE_TEST_KEY_BYTES, 300 + i,
+                                      keys[i], CACHE_TEST_KEY_BYTES);
         }
-
-        sanitizec_cache_store(first, 201, "one");
-        sanitizec_cache_store(second, 202, "two");
-        output = sanitizec_cache_get(first, 201);
-        if (!output || strcmp(output, "one") != 0) {
-                fprintf(stderr, "Test FAILED: Cache hit before eviction.\n");
-                goto cleanup;
-        }
-        free(output);
-        output = NULL;
-
-        sanitizec_cache_store(third, 203, "three");
-        output = sanitizec_cache_get(second, 202);
+        output = sanitizec_cache_get(keys[0], CACHE_TEST_KEY_BYTES, 300);
         if (output != NULL) {
-                fprintf(stderr, "Test FAILED: LRU capacity eviction.\n");
+                fprintf(stderr, "Test FAILED: Cache budget eviction.\n");
                 goto cleanup;
         }
-        output = sanitizec_cache_get(first, 201);
-        if (!output || strcmp(output, "one") != 0) {
-                fprintf(stderr,
-                        "Test FAILED: Recently used entry was evicted.\n");
-                goto cleanup;
-        }
-        free(output);
-        output = NULL;
-        output = sanitizec_cache_get(third, 203);
-        if (!output || strcmp(output, "three") != 0) {
-                fprintf(stderr, "Test FAILED: New cache entry was evicted.\n");
+        output =
+            sanitizec_cache_get(keys[CACHE_TEST_ENTRIES - 1],
+                                CACHE_TEST_KEY_BYTES, 299 + CACHE_TEST_ENTRIES);
+        if (!output || strcmp(output, keys[CACHE_TEST_ENTRIES - 1]) != 0) {
+                fprintf(stderr, "Test FAILED: Recent cache entry missing.\n");
                 goto cleanup;
         }
         free(output);
         output = NULL;
 
-        oversized = make_large_key(SANITIZEC_CACHE_MAX_BYTES, 'x');
+        oversized = make_large_key(SANITIZEC_CACHE_MAX_INPUT_BYTES + 1, 'x');
         if (!oversized) {
                 fprintf(
                     stderr,
                     "Test FAILED: Could not allocate oversized cache key.\n");
                 goto cleanup;
         }
-        sanitizec_cache_store(oversized, 204, "too large");
-        output = sanitizec_cache_get(oversized, 204);
+        sanitizec_cache_store(oversized, SANITIZEC_CACHE_MAX_INPUT_BYTES + 1,
+                              204, "too large", sizeof("too large") - 1);
+        output = sanitizec_cache_get(oversized,
+                                     SANITIZEC_CACHE_MAX_INPUT_BYTES + 1, 204);
         if (output != NULL) {
                 fprintf(stderr, "Test FAILED: Oversized entry was cached.\n");
                 goto cleanup;
         }
+        free(output);
+        output = NULL;
 
         const char* thread_input    = "cache hit / thread test";
         const char* thread_expected = "cache%20hit%20%2F%20thread%20test";
@@ -178,9 +171,7 @@ cleanup:
         for (int i = 0; i < threads_started; i++) {
                 pthread_join(threads[i], NULL);
         }
-        free(first);
-        free(second);
-        free(third);
+        for (int i = 0; i < CACHE_TEST_ENTRIES; i++) free(keys[i]);
         free(oversized);
         free(output);
         return success;

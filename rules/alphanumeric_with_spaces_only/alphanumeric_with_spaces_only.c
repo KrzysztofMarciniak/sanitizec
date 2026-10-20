@@ -6,30 +6,42 @@
 
 #include "../../misc/strdup_safe.h"
 
-int alphanumeric_with_spaces_apply(const char* input,
-                                   sanitizec_buffer_t* output,
-                                   char** errmsg) {
+sanitizec_rule_result_t alphanumeric_with_spaces_apply(
+    sanitizec_span_t input, sanitizec_buffer_t* output,
+    sanitizec_span_t* result, char** errmsg) {
         if (errmsg) *errmsg = NULL;
-        if (!input || !output) {
+        if (!input.data || !output || !result) {
                 if (errmsg)
                         *errmsg = strdup_safe(
                             "Alphanumeric with Spaces Rule: Input is NULL.");
-                return 0;
+                return SANITIZEC_RULE_FAILED;
         }
 
-        size_t len = strlen(input);
+        size_t len  = input.length;
+        int changed = 0;
+        for (size_t i = 0; i < len; i++) {
+                if (!isalnum((unsigned char)input.data[i]) &&
+                    input.data[i] != ' ')
+                        changed = 1;
+        }
+        if (!changed) {
+                *result = input;
+                return SANITIZEC_RULE_UNCHANGED;
+        }
+
         if (len == SIZE_MAX || !sanitizec_buffer_reserve(output, len + 1)) {
                 if (errmsg)
                         *errmsg = strdup_safe(
                             "Alphanumeric with Spaces Rule: Allocation "
                             "failed.");
-                return 0;
+                return SANITIZEC_RULE_FAILED;
         }
 
         size_t j = 0;
         for (size_t i = 0; i < len; i++) {
-                if (isalnum((unsigned char)input[i]) || input[i] == ' ') {
-                        output->data[j++] = input[i];
+                if (isalnum((unsigned char)input.data[i]) ||
+                    input.data[i] == ' ') {
+                        output->data[j++] = input.data[i];
                 }
         }
 
@@ -38,7 +50,8 @@ int alphanumeric_with_spaces_apply(const char* input,
                         *errmsg = strdup_safe(
                             "Alphanumeric with Spaces Rule: Allocation "
                             "failed.");
-                return 0;
+                return SANITIZEC_RULE_FAILED;
         }
-        return 1;
+        *result = (sanitizec_span_t){output->data, j};
+        return SANITIZEC_RULE_CHANGED;
 }

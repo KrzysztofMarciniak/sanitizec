@@ -4,65 +4,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "../../misc/sanitizec_pattern.h"
 #include "../../misc/strdup_safe.h"
-
-typedef struct {
-        const char* pattern;
-        size_t length;
-} shell_pattern_t;
-
-static const shell_pattern_t patterns[] = {
-    {"nc", 2},     {"netcat", 6}, {"bash", 4}, {"busybox", 7},
-    {"&", 1},      {"sh", 2},     {"dev", 3},  {"tcp", 3},
-    {"mkfifo", 6}, {"tmp", 3},    {"/", 1},    {"socket", 6}};
-
-static const size_t PATTERN_COUNT = sizeof(patterns) / sizeof(patterns[0]);
-
-/**
- * @brief Helper function to check for a case-insensitive match of any fixed
- * pattern.
- *
- * For single-character patterns ('/', '&'), the match is case-sensitive as they
- * are not letters.
- *
- * @param input The entire input string.
- * @param input_len The length of the input string.
- * @param current_pos The starting position to check for a pattern match.
- * @return The length of the matched pattern, or 0 if no pattern is matched.
- */
-static size_t check_for_pattern(const char* input, size_t input_len,
-                                size_t current_pos) {
-        for (size_t k = 0; k < PATTERN_COUNT; k++) {
-                const shell_pattern_t* pat = &patterns[k];
-
-                if (current_pos + pat->length <= input_len) {
-                        int match = 1;
-                        for (size_t i = 0; i < pat->length; i++) {
-                                char input_char   = input[current_pos + i];
-                                char pattern_char = pat->pattern[i];
-
-                                if (isalpha((unsigned char)input_char)) {
-                                        if (tolower(
-                                                (unsigned char)input_char) !=
-                                            tolower(
-                                                (unsigned char)pattern_char)) {
-                                                match = 0;
-                                                break;
-                                        }
-                                } else {
-                                        if (input_char != pattern_char) {
-                                                match = 0;
-                                                break;
-                                        }
-                                }
-                        }
-                        if (match) {
-                                return pat->length;
-                        }
-                }
-        }
-        return 0;
-}
 
 /**
  * @brief Helper to check for a pattern that matches a four-octet IPv4 address
@@ -119,38 +62,50 @@ static size_t check_for_ip_pattern(const char* input, size_t input_len,
         return 0;
 }
 
-int reverse_shell_safe_apply(const char* input, sanitizec_buffer_t* output,
-                             char** errmsg) {
+sanitizec_rule_result_t reverse_shell_safe_apply(sanitizec_span_t input,
+                                                 sanitizec_buffer_t* output,
+                                                 sanitizec_span_t* result,
+                                                 char** errmsg) {
         if (errmsg) *errmsg = NULL;
-        if (!input || !output) {
+        if (!input.data || !output || !result) {
                 if (errmsg)
                         *errmsg =
                             strdup_safe("Reverse Shell Rule: Input is NULL.");
-                return 0;
+                return SANITIZEC_RULE_FAILED;
         }
 
-        size_t len = strlen(input);
+        size_t len  = input.length;
+        int matched = sanitizec_pattern_scan(input.data, len,
+                                             &sanitizec_shell_automaton, NULL);
+        for (size_t i = 0; i < len && !matched; i++) {
+                matched = check_for_ip_pattern(input.data, len, i) != 0;
+        }
+        if (!matched) {
+                *result = input;
+                return SANITIZEC_RULE_UNCHANGED;
+        }
+
         if (len == SIZE_MAX || !sanitizec_buffer_reserve(output, len + 1)) {
                 if (errmsg)
                         *errmsg = strdup_safe(
                             "Reverse Shell Rule: Allocation failed.");
-                return 0;
+                return SANITIZEC_RULE_FAILED;
         }
 
+        memset(output->data, 0, len);
+        sanitizec_pattern_scan(input.data, len, &sanitizec_shell_automaton,
+                               (unsigned char*)output->data);
         size_t j = 0;
         for (size_t i = 0; i < len;) {
-                size_t skip_length = 0;
-
-                skip_length = check_for_pattern(input, len, i);
-
+                size_t skip_length = (unsigned char)output->data[i];
                 if (skip_length == 0) {
-                        skip_length = check_for_ip_pattern(input, len, i);
+                        skip_length = check_for_ip_pattern(input.data, len, i);
                 }
 
                 if (skip_length > 0) {
                         i += skip_length;
                 } else {
-                        output->data[j++] = input[i++];
+                        output->data[j++] = input.data[i++];
                 }
         }
 
@@ -158,7 +113,8 @@ int reverse_shell_safe_apply(const char* input, sanitizec_buffer_t* output,
                 if (errmsg)
                         *errmsg = strdup_safe(
                             "Reverse Shell Rule: Allocation failed.");
-                return 0;
+                return SANITIZEC_RULE_FAILED;
         }
-        return 1;
+        *result = (sanitizec_span_t){output->data, j};
+        return SANITIZEC_RULE_CHANGED;
 }

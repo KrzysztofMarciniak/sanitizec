@@ -1,77 +1,46 @@
 #include "sanitize_sql.h"
 
-#include <ctype.h>
 #include <stdint.h>
 #include <string.h>
 
+#include "../../misc/sanitizec_pattern.h"
 #include "../../misc/strdup_safe.h"
 
-typedef struct {
-        const char* keyword;
-        size_t length;
-} sql_keyword_t;
-
-static const sql_keyword_t keywords[] = {
-    {"SELECT", 6}, {"INSERT", 6}, {"UPDATE", 6}, {"DELETE", 6}, {"UNION", 5},
-    {"DROP", 4},   {"CONCAT", 6}, {"PRAGMA", 6}, {"1=1", 3},    {"SLEEP", 5}};
-
-static const size_t KEYWORD_COUNT = sizeof(keywords) / sizeof(keywords[0]);
-
-/**
- * @brief Helper function to check for a case-insensitive match of any keyword.
- *
- * @param input The entire input string.
- * @param input_len The length of the input string.
- * @param current_pos The starting position to check for a keyword match.
- * @return The length of the matched keyword, or 0 if no keyword is matched.
- */
-static size_t check_for_keyword(const char* input, size_t input_len,
-                                size_t current_pos) {
-        for (size_t k = 0; k < KEYWORD_COUNT; k++) {
-                const sql_keyword_t* kw = &keywords[k];
-                if (current_pos + kw->length <= input_len) {
-                        int match = 1;
-                        for (size_t i = 0; i < kw->length; i++) {
-                                if (tolower((
-                                        unsigned char)input[current_pos + i]) !=
-                                    tolower((unsigned char)kw->keyword[i])) {
-                                        match = 0;
-                                        break;
-                                }
-                        }
-                        if (match) {
-                                return kw->length;
-                        }
-                }
-        }
-        return 0;
-}
-
-int sql_safe_apply(const char* input, sanitizec_buffer_t* output,
-                   char** errmsg) {
+sanitizec_rule_result_t sql_safe_apply(sanitizec_span_t input,
+                                       sanitizec_buffer_t* output,
+                                       sanitizec_span_t* result,
+                                       char** errmsg) {
         if (errmsg) *errmsg = NULL;
-        if (!input || !output) {
+        if (!input.data || !output || !result) {
                 if (errmsg)
                         *errmsg = strdup_safe("SQL-Safe Rule: Input is NULL.");
-                return 0;
+                return SANITIZEC_RULE_FAILED;
         }
 
-        size_t len = strlen(input);
+        size_t len = input.length;
+        if (!sanitizec_pattern_scan(input.data, len, &sanitizec_sql_automaton,
+                                    NULL)) {
+                *result = input;
+                return SANITIZEC_RULE_UNCHANGED;
+        }
+
         if (len == SIZE_MAX || !sanitizec_buffer_reserve(output, len + 1)) {
                 if (errmsg)
                         *errmsg =
                             strdup_safe("SQL-Safe Rule: Allocation failed.");
-                return 0;
+                return SANITIZEC_RULE_FAILED;
         }
 
+        memset(output->data, 0, len);
+        sanitizec_pattern_scan(input.data, len, &sanitizec_sql_automaton,
+                               (unsigned char*)output->data);
         size_t j = 0;
         for (size_t i = 0; i < len;) {
-                size_t skip_length = check_for_keyword(input, len, i);
-
+                size_t skip_length = (unsigned char)output->data[i];
                 if (skip_length > 0) {
                         i += skip_length;
                 } else {
-                        output->data[j++] = input[i++];
+                        output->data[j++] = input.data[i++];
                 }
         }
 
@@ -79,7 +48,8 @@ int sql_safe_apply(const char* input, sanitizec_buffer_t* output,
                 if (errmsg)
                         *errmsg =
                             strdup_safe("SQL-Safe Rule: Allocation failed.");
-                return 0;
+                return SANITIZEC_RULE_FAILED;
         }
-        return 1;
+        *result = (sanitizec_span_t){output->data, j};
+        return SANITIZEC_RULE_CHANGED;
 }

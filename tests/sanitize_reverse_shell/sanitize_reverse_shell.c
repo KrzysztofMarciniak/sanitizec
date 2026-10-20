@@ -71,5 +71,16 @@ int run_reverse_shell_safe_test(void) {
         }
 
         free(safe_output);
+        safe_output = sanitizec_apply(
+            "NC netcat BASH busybox & SH dev tcp mkfifo tmp / socket",
+            SANITIZEC_RULE_REVERSE_SHELL, &errmsg);
+        if (!safe_output || strcmp(safe_output, "           ") != 0) {
+                fprintf(stderr, "Test FAILED: Shell automaton patterns.\n");
+                free(safe_output);
+                free(errmsg);
+                return 0;
+        }
+        free(safe_output);
+        free(errmsg);
         return success;
 }

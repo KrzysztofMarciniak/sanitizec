@@ -11,27 +11,38 @@ static int is_hex_char(char c) {
                 (c >= 'A' && c <= 'F'));
 }
 
-int hex_only_apply(const char* input, sanitizec_buffer_t* output,
-                   char** errmsg) {
+sanitizec_rule_result_t hex_only_apply(sanitizec_span_t input,
+                                       sanitizec_buffer_t* output,
+                                       sanitizec_span_t* result,
+                                       char** errmsg) {
         if (errmsg) *errmsg = NULL;
-        if (!input || !output) {
+        if (!input.data || !output || !result) {
                 if (errmsg)
                         *errmsg = strdup_safe("Hex-only Rule: Input is NULL.");
-                return 0;
+                return SANITIZEC_RULE_FAILED;
         }
 
-        size_t len = strlen(input);
+        size_t len  = input.length;
+        int changed = 0;
+        for (size_t i = 0; i < len; i++) {
+                if (!is_hex_char(input.data[i])) changed = 1;
+        }
+        if (!changed) {
+                *result = input;
+                return SANITIZEC_RULE_UNCHANGED;
+        }
+
         if (len == SIZE_MAX || !sanitizec_buffer_reserve(output, len + 1)) {
                 if (errmsg)
                         *errmsg =
                             strdup_safe("Hex-only Rule: Allocation failed.");
-                return 0;
+                return SANITIZEC_RULE_FAILED;
         }
 
         size_t j = 0;
         for (size_t i = 0; i < len; ++i) {
-                if (is_hex_char(input[i])) {
-                        output->data[j++] = input[i];
+                if (is_hex_char(input.data[i])) {
+                        output->data[j++] = input.data[i];
                 }
         }
 
@@ -39,7 +50,8 @@ int hex_only_apply(const char* input, sanitizec_buffer_t* output,
                 if (errmsg)
                         *errmsg =
                             strdup_safe("Hex-only Rule: Allocation failed.");
-                return 0;
+                return SANITIZEC_RULE_FAILED;
         }
-        return 1;
+        *result = (sanitizec_span_t){output->data, j};
+        return SANITIZEC_RULE_CHANGED;
 }

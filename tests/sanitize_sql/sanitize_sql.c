@@ -65,5 +65,16 @@ int run_sql_safe_test(void) {
         }
 
         free(safe_output);
+        safe_output = sanitizec_apply(
+            "SELECTINSERTUPDATEDELETEUNIONDROPCONCATPRAGMA1=1SLEEP",
+            SANITIZEC_RULE_SQL, &errmsg);
+        if (!safe_output || safe_output[0] != '\0') {
+                fprintf(stderr, "Test FAILED: SQL automaton patterns.\n");
+                free(safe_output);
+                free(errmsg);
+                return 0;
+        }
+        free(safe_output);
+        free(errmsg);
         return success;
 }

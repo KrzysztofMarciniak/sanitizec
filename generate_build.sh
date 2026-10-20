@@ -37,14 +37,18 @@ echo "cc = $CC"
 echo "ranlib = ranlib"
 echo ""
 echo "# Override CPPFLAGS, OPTFLAGS, ARCHFLAGS, CFLAGS, LDFLAGS, LDLIBS, THREAD_FLAGS, and CACHE."
-echo "cflags = $CPPFLAGS $OPTFLAGS $ARCHFLAGS $CFLAGS $CACHE_FLAGS -fPIC $THREAD_FLAGS"
-echo "ldflags = $LDFLAGS $THREAD_FLAGS"
-echo "sharedflags = -shared $LDFLAGS $THREAD_FLAGS"
+echo "cflags = $CPPFLAGS $OPTFLAGS $ARCHFLAGS $CFLAGS $CACHE_FLAGS -flto -fvisibility=hidden -fPIC $THREAD_FLAGS"
+echo "ldflags = $LDFLAGS -flto $THREAD_FLAGS"
+echo "sharedflags = -shared $LDFLAGS -flto $THREAD_FLAGS"
 echo "libs = $LDLIBS"
 echo ""
 echo "rule cc"
 echo "  command = \$cc \$cflags -c \$in -o \$out"
 echo "  description = CC \$in"
+echo ""
+echo "rule patterns"
+echo "  command = python3 \$in \$out"
+echo "  description = GEN \$out"
 echo ""
 echo "rule sharedlib"
 echo "  command = \$cc \$sharedflags -o \$out \$in \$libs"
@@ -55,15 +59,23 @@ echo "  command = \$cc \$ldflags \$in \$libs -o \$out -Wl,-rpath,."
 echo "  description = LINK \$out"
 echo ""
 echo "rule clean"
-echo "  command = rm -f \`find . -name '*.o'\` *.so test test-runner"
+echo "  command = rm -f \`find . -name '*.o'\` *.so test test-runner misc/sanitizec_patterns.generated.h"
 echo "  description = CLEAN"
 echo ""
 echo "# --- Object File Targets ---"
+echo "build misc/sanitizec_patterns.generated.h: patterns tools/generate_patterns.py"
 
 ALL_SRCS="$LIB_SRCS $TEST_SRCS"
 for src in $ALL_SRCS; do
     obj=$(echo $src | sed 's/\.c/\.o/g')
-    echo "build $obj: cc $src"
+    case "$src" in
+        misc/sanitizec_pattern.c|rules/sanitize_sql/sanitize_sql.c|rules/sanitize_reverse_shell/sanitize_reverse_shell.c)
+            echo "build $obj: cc $src | misc/sanitizec_patterns.generated.h"
+            ;;
+        *)
+            echo "build $obj: cc $src"
+            ;;
+    esac
 done
 
 echo ""
@@ -72,7 +84,7 @@ echo "build lib${LIB_NAME}.so: sharedlib $LIB_OBJS"
 
 echo ""
 echo "# --- Test Executable Target ---"
-echo "build test: link $TEST_OBJS lib${LIB_NAME}.so"
+echo "build test: link $TEST_OBJS misc/sanitizec_buffer.o lib${LIB_NAME}.so"
 
 echo ""
 echo "# --- Default and Utility Targets ---"

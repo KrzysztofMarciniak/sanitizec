@@ -10,7 +10,7 @@
 static int check_output(const char* input, int ruleset, const char* expected) {
         char* errmsg = NULL;
         char* output = sanitizec_apply(input, ruleset, &errmsg);
-        int success = output && strcmp(output, expected) == 0;
+        int success  = output && strcmp(output, expected) == 0;
         if (!success) {
                 fprintf(stderr,
                         "Test FAILED: Expected \"%s\", got \"%s\" (%s).\n",
@@ -34,23 +34,56 @@ int run_sanitizec_buffer_test(void) {
                 return 0;
         }
 
+        for (size_t i = 0; i < SANITIZEC_BUFFER_INLINE_CAPACITY + 1; i++) {
+                if (!sanitizec_buffer_append(&buffer, 'x')) {
+                        fprintf(stderr, "Test FAILED: Buffer append.\n");
+                        sanitizec_buffer_destroy(&buffer);
+                        return 0;
+                }
+        }
+        if (buffer.length != SANITIZEC_BUFFER_INLINE_CAPACITY + 1 ||
+            buffer.data[buffer.length] != '\0') {
+                fprintf(stderr, "Test FAILED: Buffer append growth.\n");
+                sanitizec_buffer_destroy(&buffer);
+                return 0;
+        }
+        sanitizec_buffer_reset(&buffer);
+
         buffer.data[0] = 'x';
         if (!sanitizec_buffer_set_length(&buffer, 1) ||
-            !sanitizec_buffer_reserve(
-                &buffer, SANITIZEC_BUFFER_INLINE_CAPACITY + 1) ||
+            !sanitizec_buffer_reserve(&buffer,
+                                      SANITIZEC_BUFFER_INLINE_CAPACITY + 1) ||
             buffer.data == buffer.inline_data || buffer.data[0] != 'x' ||
             buffer.capacity < SANITIZEC_BUFFER_INLINE_CAPACITY + 1) {
-                fprintf(stderr, "Test FAILED: Heap spill or data preservation.\n");
+                fprintf(stderr,
+                        "Test FAILED: Heap spill or data preservation.\n");
                 sanitizec_buffer_destroy(&buffer);
                 return 0;
         }
         sanitizec_buffer_destroy(&buffer);
 
-        if (!check_output("<", SANITIZEC_RULE_XSS_ESCAPE |
-                                   SANITIZEC_RULE_URL_COMPONENT_ENCODE,
-                          "%26lt%3B") ||
-            !check_output("", SANITIZEC_RULE_WHITESPACE_TRIM |
-                                  SANITIZEC_RULE_URL_COMPONENT_ENCODE,
+        if (!check_output(
+                "<",
+                SANITIZEC_RULE_XSS_ESCAPE | SANITIZEC_RULE_URL_COMPONENT_ENCODE,
+                "%26lt%3B") ||
+            !check_output(
+                "A1b2", SANITIZEC_RULE_ALPHA_ONLY | SANITIZEC_RULE_NUMERIC_ONLY,
+                "") ||
+            !check_output("AB12",
+                          SANITIZEC_RULE_ALPHA_ONLY | SANITIZEC_RULE_SQL |
+                              SANITIZEC_RULE_HEX_ONLY,
+                          "AB") ||
+            !check_output(
+                "  clean  ",
+                SANITIZEC_RULE_WHITESPACE_TRIM | SANITIZEC_RULE_ALPHA_ONLY,
+                "clean") ||
+            !check_output(
+                "  x!  ",
+                SANITIZEC_RULE_WHITESPACE_TRIM | SANITIZEC_RULE_ALPHA_ONLY,
+                "x") ||
+            !check_output("",
+                          SANITIZEC_RULE_WHITESPACE_TRIM |
+                              SANITIZEC_RULE_URL_COMPONENT_ENCODE,
                           "") ||
             !check_output("unchanged", SANITIZEC_RULE_NONE, "unchanged")) {
                 return 0;
@@ -70,11 +103,11 @@ int run_sanitizec_buffer_test(void) {
                         "Test FAILED: Expanded output should spill to heap.\n");
                 return 0;
         }
-        if (!check_output(input, SANITIZEC_RULE_URL_COMPONENT_ENCODE |
-                                    SANITIZEC_RULE_ASCII_PRINTABLE_ONLY,
+        if (!check_output(input,
+                          SANITIZEC_RULE_URL_COMPONENT_ENCODE |
+                              SANITIZEC_RULE_ASCII_PRINTABLE_ONLY,
                           expected)) {
-                fprintf(stderr,
-                        "Test FAILED: Chained heap-spilled output.\n");
+                fprintf(stderr, "Test FAILED: Chained heap-spilled output.\n");
                 return 0;
         }
 

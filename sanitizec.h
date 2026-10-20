@@ -17,6 +17,12 @@
 #define SANITIZEC_RULE_ALPHANUMERIC_WITH_UNDERSCORE_HYPHEN_ONLY (1 << 12)
 #define SANITIZEC_RULE_EMAIL_ALLOWED_CHARS (1 << 13)
 
+#if defined(__GNUC__) || defined(__clang__)
+#define SANITIZEC_API __attribute__((visibility("default")))
+#else
+#define SANITIZEC_API
+#endif
+
 /**
  * @brief Applies sanitization rules to an input string.
  *
@@ -25,6 +31,7 @@
  * @param errmsg Pointer to store error message if sanitization fails.
  * @return Heap-allocated sanitized string (caller must free), or NULL on error.
  */
-char* sanitizec_apply(const char* input, int ruleset, char** errmsg);
+SANITIZEC_API char* sanitizec_apply(const char* input, int ruleset,
+                                    char** errmsg);
 
 #endif

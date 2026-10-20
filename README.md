@@ -48,6 +48,7 @@ Rules can be combined using the bitmask API; transformations run in the dispatch
 
 - C compiler (e.g., GCC or Clang)
 - GNU Make or Ninja installed
+- Python 3 for generating the SQL and shell match automata
 
 ---
 
@@ -64,20 +65,24 @@ make check
 ```
 
 `make test` builds the test runner; `make check` builds and runs it.
-The default optimization flags are `-O3`. Override `OPTFLAGS` or supply
+The default optimization flags are `-O3`, LTO, and hidden default symbol
+visibility; only `sanitizec_apply` is exported. Override `OPTFLAGS` or supply
 `ARCHFLAGS` for optional host-specific tuning; for example,
 `make OPTFLAGS=-O3 ARCHFLAGS=-march=native`. Native tuning can make the library
 incompatible with other CPU models. `CFLAGS`, `CPPFLAGS`, and `THREAD_FLAGS`
 remain configurable, as do `LDFLAGS` and `LDLIBS`. Runtime memoization is off by
 default because it slows unique-input workloads; enable it for repetition-heavy
-workloads with `make CACHE=1`. The cache is process-local, thread-safe, and
-limited to a nominal 1 MiB including index and entry metadata (allocator
-overhead excluded). It retains cached input/output bytes until eviction or
-process exit. Make tracks build-flag changes and rebuilds affected objects
-automatically. Use `make CACHE=1 install` to install a memoization-enabled build.
-Rule chains use two per-call scratch buffers with 1 KiB of stack capacity each;
-larger intermediates spill to heap. `sanitizec_apply` still returns a
-heap-allocated string that the caller must free.
+workloads with `make CACHE=1`. The cache is thread-local, limited to a nominal
+1 MiB per thread including index and entry metadata (allocator overhead
+excluded), and skips inputs over 4 KiB and rulesets containing only character
+filters and/or whitespace trim. Cached input/output bytes are released when
+their thread exits or entries are evicted. Make tracks build-flag changes and
+rebuilds affected objects automatically. Use `make CACHE=1 install` to install
+a memoization-enabled build. Rule chains use two per-call scratch buffers with
+1 KiB of stack capacity each; larger intermediates spill to heap. Unchanged
+rules avoid intermediate copies, while trim uses a pointer/length view.
+`sanitizec_apply` still returns a heap-allocated string that the caller must
+free.
 
 Run all benchmark cases with:
 
@@ -88,8 +93,9 @@ make benchmark
 ```
 
 The runner warms up each case, takes five samples, and reports the median for
-short repeated/unique inputs and large repeated/unique payloads, with calls per
-second and input throughput. To measure the optional memoization build, use
+clean/dirty XSS, URL, filter, SQL, shell, and LFI inputs plus large repeated and
+unique payloads, with calls per second and input throughput. The output labels
+whether memoization is enabled. To measure that build, use
 `make CACHE=1 benchmark`; compare runs on the same machine because results are
 workload- and system-specific.
 

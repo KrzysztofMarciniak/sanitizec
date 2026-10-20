@@ -5,28 +5,40 @@
 
 #include "../../misc/strdup_safe.h"
 
-int ascii_printable_only_apply(const char* input, sanitizec_buffer_t* output,
-                               char** errmsg) {
+sanitizec_rule_result_t ascii_printable_only_apply(sanitizec_span_t input,
+                                                   sanitizec_buffer_t* output,
+                                                   sanitizec_span_t* result,
+                                                   char** errmsg) {
         if (errmsg) *errmsg = NULL;
-        if (!input || !output) {
+        if (!input.data || !output || !result) {
                 if (errmsg)
                         *errmsg =
                             strdup_safe("Printable ASCII rule: Input is NULL.");
-                return 0;
+                return SANITIZEC_RULE_FAILED;
         }
 
-        size_t len = strlen(input);
+        size_t len  = input.length;
+        int changed = 0;
+        for (size_t i = 0; i < len; i++) {
+                unsigned char c = (unsigned char)input.data[i];
+                if (c < 0x20 || c > 0x7e) changed = 1;
+        }
+        if (!changed) {
+                *result = input;
+                return SANITIZEC_RULE_UNCHANGED;
+        }
+
         if (len == SIZE_MAX || !sanitizec_buffer_reserve(output, len + 1)) {
                 if (errmsg)
                         *errmsg = strdup_safe(
                             "Printable ASCII rule: Allocation "
                             "failed.");
-                return 0;
+                return SANITIZEC_RULE_FAILED;
         }
 
         size_t j = 0;
         for (size_t i = 0; i < len; i++) {
-                unsigned char c = (unsigned char)input[i];
+                unsigned char c = (unsigned char)input.data[i];
                 if (c >= 0x20 && c <= 0x7E) {
                         output->data[j++] = (char)c;
                 }
@@ -36,7 +48,8 @@ int ascii_printable_only_apply(const char* input, sanitizec_buffer_t* output,
                 if (errmsg)
                         *errmsg = strdup_safe(
                             "Printable ASCII rule: Allocation failed.");
-                return 0;
+                return SANITIZEC_RULE_FAILED;
         }
-        return 1;
+        *result = (sanitizec_span_t){output->data, j};
+        return SANITIZEC_RULE_CHANGED;
 }
