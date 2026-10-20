@@ -75,6 +75,9 @@ limited to a nominal 1 MiB including index and entry metadata (allocator
 overhead excluded). It retains cached input/output bytes until eviction or
 process exit. Make tracks build-flag changes and rebuilds affected objects
 automatically. Use `make CACHE=1 install` to install a memoization-enabled build.
+Rule chains use two per-call scratch buffers with 1 KiB of stack capacity each;
+larger intermediates spill to heap. `sanitizec_apply` still returns a
+heap-allocated string that the caller must free.
 
 Run all benchmark cases with:
 

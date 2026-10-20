@@ -1,19 +1,18 @@
 #ifndef SANITIZEC_RULE_ESCAPE_XSS_H
 #define SANITIZEC_RULE_ESCAPE_XSS_H
 
-#include <stddef.h>// For size_t
+#include "../../misc/sanitizec_buffer.h"
 
 /**
  * @brief Applies XSS escaping (HTML encoding) to specific characters.
  * Replaces: '&', '<', '>', '"', and "'".
  *
- * @param input The string to be escaped. This string must be dynamically
- * allocated (ownership transferred and freed by this function).
- * @param errmsg A pointer to a char* which will be set to a dynamically
- * allocated error message on failure, or NULL on success.
- * @return char* A new, escaped, dynamically allocated string, or NULL on
- * allocation failure.
+ * @param input The string to be escaped.
+ * @param output Buffer for the escaped string.
+ * @param errmsg Optional dynamically allocated error message on failure.
+ * @return Nonzero on success.
  */
-char* escape_xss_apply(char* input, char** errmsg);
+int escape_xss_apply(const char* input, sanitizec_buffer_t* output,
+                     char** errmsg);
 
 #endif// SANITIZEC_RULE_ESCAPE_XSS_H

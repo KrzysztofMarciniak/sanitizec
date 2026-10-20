@@ -23,7 +23,7 @@
  * @param input The original string to sanitize.
  * @param ruleset Bitmask of sanitization rules to apply.
  * @param errmsg Pointer to store error message if sanitization fails.
- * @return char* Sanitized string, or NULL on error.
+ * @return Heap-allocated sanitized string (caller must free), or NULL on error.
  */
 char* sanitizec_apply(const char* input, int ruleset, char** errmsg);
 

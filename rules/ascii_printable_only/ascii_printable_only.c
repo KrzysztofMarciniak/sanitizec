@@ -1,39 +1,42 @@
 #include "ascii_printable_only.h"
 
-#include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "../../misc/strdup_safe.h"
 
-char* ascii_printable_only_apply(char* input, char** errmsg) {
+int ascii_printable_only_apply(const char* input, sanitizec_buffer_t* output,
+                               char** errmsg) {
         if (errmsg) *errmsg = NULL;
-        if (!input) {
+        if (!input || !output) {
                 if (errmsg)
                         *errmsg =
                             strdup_safe("Printable ASCII rule: Input is NULL.");
-                return NULL;
+                return 0;
         }
 
-        size_t len   = strlen(input);
-        char* output = (char*)malloc(len + 1);
-        if (!output) {
-                free(input);
+        size_t len = strlen(input);
+        if (len == SIZE_MAX || !sanitizec_buffer_reserve(output, len + 1)) {
                 if (errmsg)
                         *errmsg = strdup_safe(
                             "Printable ASCII rule: Allocation "
                             "failed.");
-                return NULL;
+                return 0;
         }
 
         size_t j = 0;
         for (size_t i = 0; i < len; i++) {
                 unsigned char c = (unsigned char)input[i];
                 if (c >= 0x20 && c <= 0x7E) {
-                        output[j++] = (char)c;
+                        output->data[j++] = (char)c;
                 }
         }
 
-        output[j] = '\0';
-        free(input);
-        return output;
+        if (!sanitizec_buffer_set_length(output, j)) {
+                if (errmsg)
+                        *errmsg = strdup_safe(
+                            "Printable ASCII rule: Allocation failed.");
+                return 0;
+        }
+        return 1;
 }

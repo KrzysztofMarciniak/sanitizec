@@ -13,6 +13,7 @@
 #include "tests/sanitize_lfi/sanitize_lfi.h"
 #include "tests/sanitize_reverse_shell/sanitize_reverse_shell.h"
 #include "tests/sanitize_sql/sanitize_sql.h"
+#include "tests/sanitizec_buffer/sanitizec_buffer.h"
 #include "tests/sanitizec_cache/sanitizec_cache.h"
 #include "tests/trim_whitespace/trim_whitespace.h"
 #include "tests/url_component_encode/url_component_encode.h"
@@ -93,6 +94,10 @@ int main(void) {
         }
         total_tests++;
         if (run_sanitizec_cache_test() == 0) {
+                number_failed++;
+        }
+        total_tests++;
+        if (run_sanitizec_buffer_test() == 0) {
                 number_failed++;
         }
         printf("\n--- Test Manager Complete ---\n");

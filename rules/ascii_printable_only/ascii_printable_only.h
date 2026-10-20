@@ -1,6 +1,9 @@
 #ifndef ASCII_PRINTABLE_ONLY_H
 #define ASCII_PRINTABLE_ONLY_H
 
-char* ascii_printable_only_apply(char* input, char** errmsg);
+#include "../../misc/sanitizec_buffer.h"
+
+int ascii_printable_only_apply(const char* input, sanitizec_buffer_t* output,
+                               char** errmsg);
 
 #endif

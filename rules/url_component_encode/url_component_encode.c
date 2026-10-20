@@ -1,7 +1,6 @@
 #include "url_component_encode.h"
 
 #include <stdint.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "../../misc/strdup_safe.h"
@@ -21,15 +20,16 @@ static const unsigned char unreserved[256] = {
 
 static int is_unreserved(unsigned char c) { return unreserved[c]; }
 
-char* url_component_encode_apply(char* input, char** errmsg) {
+int url_component_encode_apply(const char* input, sanitizec_buffer_t* output,
+                               char** errmsg) {
         static const char hex[] = "0123456789ABCDEF";
 
         if (errmsg) *errmsg = NULL;
-        if (!input) {
+        if (!input || !output) {
                 if (errmsg)
                         *errmsg = strdup_safe(
                             "URL component encoding rule: Input is NULL.");
-                return NULL;
+                return 0;
         }
 
         size_t len     = strlen(input);
@@ -37,38 +37,39 @@ char* url_component_encode_apply(char* input, char** errmsg) {
         for (size_t i = 0; i < len; i++) {
                 size_t growth = is_unreserved((unsigned char)input[i]) ? 1 : 3;
                 if (new_len > SIZE_MAX - growth - 1) {
-                        free(input);
                         if (errmsg)
                                 *errmsg = strdup_safe(
                                     "URL component encoding rule: Output is "
                                     "too large.");
-                        return NULL;
+                        return 0;
                 }
                 new_len += growth;
         }
 
-        char* output = (char*)malloc(new_len + 1);
-        if (!output) {
-                free(input);
+        if (!sanitizec_buffer_reserve(output, new_len + 1)) {
                 if (errmsg)
                         *errmsg = strdup_safe(
                             "URL component encoding rule: Allocation failed.");
-                return NULL;
+                return 0;
         }
 
         size_t j = 0;
         for (size_t i = 0; i < len; i++) {
                 unsigned char c = (unsigned char)input[i];
                 if (is_unreserved(c)) {
-                        output[j++] = (char)c;
+                        output->data[j++] = (char)c;
                 } else {
-                        output[j++] = '%';
-                        output[j++] = hex[c >> 4];
-                        output[j++] = hex[c & 0x0F];
+                        output->data[j++] = '%';
+                        output->data[j++] = hex[c >> 4];
+                        output->data[j++] = hex[c & 0x0F];
                 }
         }
-        output[j] = '\0';
 
-        free(input);
-        return output;
+        if (!sanitizec_buffer_set_length(output, j)) {
+                if (errmsg)
+                        *errmsg = strdup_safe(
+                            "URL component encoding rule: Allocation failed.");
+                return 0;
+        }
+        return 1;
 }

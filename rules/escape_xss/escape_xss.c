@@ -1,6 +1,6 @@
 #include "escape_xss.h"
 
-#include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "../../misc/strdup_safe.h"
@@ -13,85 +13,89 @@
  * allocated error message on failure, or NULL on success.
  * @return char* A new, escaped, dynamically allocated string.
  */
-char* escape_xss_apply(char* input, char** errmsg) {
+int escape_xss_apply(const char* input, sanitizec_buffer_t* output,
+                     char** errmsg) {
         if (errmsg) *errmsg = NULL;
 
-        if (!input) {
+        if (!input || !output) {
                 if (errmsg)
                         *errmsg = strdup_safe(
                             "XSS Escape Rule: Input string is NULL.");
-                return NULL;
+                return 0;
         }
 
         size_t len     = strlen(input);
         size_t new_len = 0;
-        size_t i, j = 0;
-
-        for (i = 0; i < len; i++) {
+        for (size_t i = 0; i < len; i++) {
+                size_t growth;
                 switch (input[i]) {
                         case '&':// becomes &amp; (5 chars, +4)
-                                new_len += 5;
+                        case '\'':
+                                growth = 5;
+                                break;
+                        case '"':// becomes &quot; (6 chars, +5)
+                                growth = 6;
                                 break;
                         case '<':// becomes &lt; (4 chars, +3)
                         case '>':// becomes &gt; (4 chars, +3)
-                                new_len += 4;
-                                break;
-                        case '"':// becomes &quot; (6 chars, +5)
-                                new_len += 6;
-                                break;
-                        case '\'':// becomes &#39; (5 chars, +4)
-                                new_len += 5;
+                                growth = 4;
                                 break;
                         default:
-                                new_len += 1;
+                                growth = 1;
                                 break;
                 }
+                if (new_len > SIZE_MAX - growth - 1) {
+                        if (errmsg)
+                                *errmsg = strdup_safe(
+                                    "XSS Escape Rule: Output is too large.");
+                        return 0;
+                }
+                new_len += growth;
         }
 
-        if (new_len == len) {
-                return input;
-        }
-
-        char* new_string = (char*)malloc(new_len + 1);
-        if (!new_string) {
-                free(input);
+        if (!sanitizec_buffer_reserve(output, new_len + 1)) {
                 if (errmsg)
                         *errmsg = strdup_safe(
                             "XSS Escape Rule: Memory allocation failed for "
                             "output string.");
-                return NULL;
+                return 0;
         }
 
-        for (i = 0; i < len; i++) {
+        size_t j = 0;
+        for (size_t i = 0; i < len; i++) {
                 switch (input[i]) {
                         case '&':
-                                memcpy(&new_string[j], "&amp;", 5);
+                                memcpy(&output->data[j], "&amp;", 5);
                                 j += 5;
                                 break;
                         case '<':
-                                memcpy(&new_string[j], "&lt;", 4);
+                                memcpy(&output->data[j], "&lt;", 4);
                                 j += 4;
                                 break;
                         case '>':
-                                memcpy(&new_string[j], "&gt;", 4);
+                                memcpy(&output->data[j], "&gt;", 4);
                                 j += 4;
                                 break;
                         case '"':
-                                memcpy(&new_string[j], "&quot;", 6);
+                                memcpy(&output->data[j], "&quot;", 6);
                                 j += 6;
                                 break;
                         case '\'':
-                                memcpy(&new_string[j], "&#39;", 5);
+                                memcpy(&output->data[j], "&#39;", 5);
                                 j += 5;
                                 break;
                         default:
-                                new_string[j++] = input[i];
+                                output->data[j++] = input[i];
                                 break;
                 }
         }
 
-        new_string[new_len] = '\0';
-
-        free(input);
-        return new_string;
+        if (!sanitizec_buffer_set_length(output, new_len)) {
+                if (errmsg)
+                        *errmsg = strdup_safe(
+                            "XSS Escape Rule: Memory allocation failed for "
+                            "output string.");
+                return 0;
+        }
+        return 1;
 }

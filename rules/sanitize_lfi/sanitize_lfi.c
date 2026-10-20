@@ -1,31 +1,22 @@
 #include "sanitize_lfi.h"
 
-#include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "../../misc/strdup_safe.h"
 
-/**
- * @brief Applies the LFI sanitization rule, removing directory traversal
- * sequences like "../" and "..".
- * * @param input The string to sanitize (will be freed by this function).
- * @param errmsg Pointer to a char* to hold an error message on failure.
- * @return The sanitized string, or NULL on failure.
- */
-char* lfi_apply(char* input, char** errmsg) {
+int lfi_apply(const char* input, sanitizec_buffer_t* output, char** errmsg) {
         if (errmsg) *errmsg = NULL;
-        if (!input) {
+        if (!input || !output) {
                 if (errmsg) *errmsg = strdup_safe("LFI Rule: Input is NULL.");
-                return NULL;
+                return 0;
         }
 
-        size_t len   = strlen(input);
-        char* output = (char*)malloc(len + 1);
-        if (!output) {
-                free(input);
+        size_t len = strlen(input);
+        if (len == SIZE_MAX || !sanitizec_buffer_reserve(output, len + 1)) {
                 if (errmsg)
                         *errmsg = strdup_safe("LFI Rule: Allocation failed.");
-                return NULL;
+                return 0;
         }
 
         size_t j = 0;
@@ -43,12 +34,13 @@ char* lfi_apply(char* input, char** errmsg) {
                         }
                 }
 
-                output[j++] = input[i++];
+                output->data[j++] = input[i++];
         }
 
-        output[j] = '\0';
-
-        free(input);
-
-        return output;
+        if (!sanitizec_buffer_set_length(output, j)) {
+                if (errmsg)
+                        *errmsg = strdup_safe("LFI Rule: Allocation failed.");
+                return 0;
+        }
+        return 1;
 }

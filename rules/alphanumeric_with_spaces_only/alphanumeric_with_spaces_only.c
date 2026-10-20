@@ -1,39 +1,44 @@
 #include "alphanumeric_with_spaces_only.h"
 
 #include <ctype.h>
-#include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "../../misc/strdup_safe.h"
 
-char* alphanumeric_with_spaces_apply(char* input, char** errmsg) {
+int alphanumeric_with_spaces_apply(const char* input,
+                                   sanitizec_buffer_t* output,
+                                   char** errmsg) {
         if (errmsg) *errmsg = NULL;
-        if (!input) {
+        if (!input || !output) {
                 if (errmsg)
                         *errmsg = strdup_safe(
                             "Alphanumeric with Spaces Rule: Input is NULL.");
-                return NULL;
+                return 0;
         }
 
-        size_t len   = strlen(input);
-        char* output = (char*)malloc(len + 1);
-        if (!output) {
-                free(input);
+        size_t len = strlen(input);
+        if (len == SIZE_MAX || !sanitizec_buffer_reserve(output, len + 1)) {
                 if (errmsg)
                         *errmsg = strdup_safe(
                             "Alphanumeric with Spaces Rule: Allocation "
                             "failed.");
-                return NULL;
+                return 0;
         }
 
         size_t j = 0;
         for (size_t i = 0; i < len; i++) {
                 if (isalnum((unsigned char)input[i]) || input[i] == ' ') {
-                        output[j++] = input[i];
+                        output->data[j++] = input[i];
                 }
         }
 
-        output[j] = '\0';
-        free(input);
-        return output;
+        if (!sanitizec_buffer_set_length(output, j)) {
+                if (errmsg)
+                        *errmsg = strdup_safe(
+                            "Alphanumeric with Spaces Rule: Allocation "
+                            "failed.");
+                return 0;
+        }
+        return 1;
 }

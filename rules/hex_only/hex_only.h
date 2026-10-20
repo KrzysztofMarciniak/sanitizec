@@ -1,6 +1,9 @@
 #ifndef HEX_ONLY_H_
 #define HEX_ONLY_H_
 
-char* hex_only_apply(char* input, char** errmsg);
+#include "../../misc/sanitizec_buffer.h"
+
+int hex_only_apply(const char* input, sanitizec_buffer_t* output,
+                   char** errmsg);
 
 #endif// HEX_ONLY_H_

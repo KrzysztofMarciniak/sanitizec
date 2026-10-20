@@ -1,7 +1,7 @@
 #include "sanitize_reverse_shell.h"
 
 #include <ctype.h>
-#include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "../../misc/strdup_safe.h"
@@ -119,30 +119,22 @@ static size_t check_for_ip_pattern(const char* input, size_t input_len,
         return 0;
 }
 
-/**
- * @brief Applies the Reverse Shell Protection sanitization rule.
- *
- * @param input The string to sanitize (will be freed by this function).
- * @param errmsg Pointer to a char* to hold an error message on failure.
- * @return The sanitized string, or NULL on failure.
- */
-char* reverse_shell_safe_apply(char* input, char** errmsg) {
+int reverse_shell_safe_apply(const char* input, sanitizec_buffer_t* output,
+                             char** errmsg) {
         if (errmsg) *errmsg = NULL;
-        if (!input) {
+        if (!input || !output) {
                 if (errmsg)
                         *errmsg =
                             strdup_safe("Reverse Shell Rule: Input is NULL.");
-                return NULL;
+                return 0;
         }
 
-        size_t len   = strlen(input);
-        char* output = (char*)malloc(len + 1);
-        if (!output) {
-                free(input);
+        size_t len = strlen(input);
+        if (len == SIZE_MAX || !sanitizec_buffer_reserve(output, len + 1)) {
                 if (errmsg)
                         *errmsg = strdup_safe(
                             "Reverse Shell Rule: Allocation failed.");
-                return NULL;
+                return 0;
         }
 
         size_t j = 0;
@@ -158,13 +150,15 @@ char* reverse_shell_safe_apply(char* input, char** errmsg) {
                 if (skip_length > 0) {
                         i += skip_length;
                 } else {
-                        output[j++] = input[i++];
+                        output->data[j++] = input[i++];
                 }
         }
 
-        output[j] = '\0';
-
-        free(input);
-
-        return output;
+        if (!sanitizec_buffer_set_length(output, j)) {
+                if (errmsg)
+                        *errmsg = strdup_safe(
+                            "Reverse Shell Rule: Allocation failed.");
+                return 0;
+        }
+        return 1;
 }

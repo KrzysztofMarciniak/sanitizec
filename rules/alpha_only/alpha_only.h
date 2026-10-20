@@ -1,16 +1,18 @@
 #ifndef SANITIZEC_RULE_ALPHA_ONLY_H
 #define SANITIZEC_RULE_ALPHA_ONLY_H
 
+#include "../../misc/sanitizec_buffer.h"
+
 /**
  * @brief Removes all non-alphabetical characters from the string.
  * Only keeps A-Z, a-z.
  *
- * @param input A dynamically allocated input string. Ownership is transferred.
- * @param errmsg Optional error message pointer (set to dynamically allocated
- * message on failure).
- * @return char* A new dynamically allocated sanitized string, or NULL on
- * failure.
+ * @param input Input string.
+ * @param output Buffer for the sanitized result.
+ * @param errmsg Optional dynamically allocated error message on failure.
+ * @return Nonzero on success.
  */
-char* alpha_only_apply(char* input, char** errmsg);
+int alpha_only_apply(const char* input, sanitizec_buffer_t* output,
+                     char** errmsg);
 
 #endif// SANITIZEC_RULE_ALPHA_ONLY_H

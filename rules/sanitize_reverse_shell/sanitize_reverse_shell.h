@@ -1,6 +1,9 @@
 #ifndef SANITIZE_REVERSE_SHELL_H_
 #define SANITIZE_REVERSE_SHELL_H_
 
-char* reverse_shell_safe_apply(char* input, char** errmsg);
+#include "../../misc/sanitizec_buffer.h"
+
+int reverse_shell_safe_apply(const char* input, sanitizec_buffer_t* output,
+                             char** errmsg);
 
 #endif// SANITIZE_REVERSE_SHELL_H_

@@ -7,6 +7,7 @@
 #ifdef SANITIZEC_ENABLE_CACHE
 #include "misc/sanitizec_cache.h"
 #endif
+#include "misc/sanitizec_buffer.h"
 #include "misc/strdup_safe.h"
 #include "rules/alpha_only/alpha_only.h"
 #include "rules/alphanumeric_only/alphanumeric_only.h"
@@ -23,7 +24,7 @@
 #include "rules/trim_whitespace/trim_whitespace.h"
 #include "rules/url_component_encode/url_component_encode.h"
 
-typedef char* (*rule_func_t)(char*, char**);
+typedef int (*rule_func_t)(const char*, sanitizec_buffer_t*, char**);
 
 typedef struct {
         int flag;
@@ -70,20 +71,25 @@ char* sanitizec_apply(const char* input, int ruleset, char** errmsg) {
         if (cached_string) return cached_string;
 #endif
 
-        char* current_string = strdup_safe(input);
-        if (!current_string) {
-                if (errmsg)
-                        *errmsg = strdup_safe(
-                            "Failed to allocate initial copy of input string.");
-                return NULL;
+        sanitizec_buffer_t buffers[2];
+        sanitizec_buffer_init(&buffers[0]);
+        sanitizec_buffer_init(&buffers[1]);
+        sanitizec_buffer_t* current_buffer = NULL;
+        sanitizec_buffer_t* output_buffer  = &buffers[0];
+        const char* current_string         = input;
+
+        int last_rule_index = -1;
+        for (int i = 0; rules_map[i].flag != 0; i++) {
+                if (ruleset & rules_map[i].flag) last_rule_index = i;
         }
 
         for (int i = 0; rules_map[i].flag != 0; i++) {
                 if (ruleset & rules_map[i].flag) {
-                        char* new_string =
-                            rules_map[i].func(current_string, errmsg);
-
-                        if (new_string == NULL) {
+                        sanitizec_buffer_reset(output_buffer);
+                        if (i == last_rule_index)
+                                sanitizec_buffer_force_heap(output_buffer);
+                        if (!rules_map[i].func(current_string, output_buffer,
+                                               errmsg)) {
                                 if (errmsg && *errmsg == NULL) {
                                         size_t msg_len =
                                             strlen(rules_map[i].name) +
@@ -99,14 +105,37 @@ char* sanitizec_apply(const char* input, int ruleset, char** errmsg) {
                                                 *errmsg = default_msg;
                                         }
                                 }
+                                sanitizec_buffer_destroy(&buffers[0]);
+                                sanitizec_buffer_destroy(&buffers[1]);
                                 return NULL;
                         }
-                        current_string = new_string;
+                        current_buffer = output_buffer;
+                        current_string = output_buffer->data;
+                        output_buffer =
+                            output_buffer == &buffers[0] ? &buffers[1]
+                                                         : &buffers[0];
                 }
         }
 
+        char* result;
+        if (current_buffer) {
+                result = sanitizec_buffer_take_string(current_buffer);
+                if (!result && errmsg)
+                        *errmsg =
+                            strdup_safe("Failed to allocate output string.");
+        } else {
+                result = strdup_safe(input);
+                if (!result && errmsg)
+                        *errmsg = strdup_safe(
+                            "Failed to allocate initial copy of input string.");
+        }
+
+        sanitizec_buffer_destroy(&buffers[0]);
+        sanitizec_buffer_destroy(&buffers[1]);
+        if (!result) return NULL;
+
 #ifdef SANITIZEC_ENABLE_CACHE
-        sanitizec_cache_store(input, ruleset, current_string);
+        sanitizec_cache_store(input, ruleset, result);
 #endif
-        return current_string;
+        return result;
 }
