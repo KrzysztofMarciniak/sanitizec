@@ -58,6 +58,18 @@ static const rule_map_t rules_map[] = {
      "Email-address character allowlist"},
     {0, NULL, NULL}};
 
+/* Keep in sync with rules_map so unknown bits do not block final selection. */
+static const int ruleset_mask =
+    SANITIZEC_RULE_XSS_ESCAPE | SANITIZEC_RULE_WHITESPACE_TRIM |
+    SANITIZEC_RULE_ALPHA_ONLY | SANITIZEC_RULE_NUMERIC_ONLY |
+    SANITIZEC_RULE_ALPHANUMERIC_ONLY | SANITIZEC_RULE_LFI |
+    SANITIZEC_RULE_SQL | SANITIZEC_RULE_REVERSE_SHELL |
+    SANITIZEC_RULE_ALPHANUMERIC_WITH_SPACES_ONLY |
+    SANITIZEC_RULE_HEX_ONLY | SANITIZEC_RULE_URL_COMPONENT_ENCODE |
+    SANITIZEC_RULE_ASCII_PRINTABLE_ONLY |
+    SANITIZEC_RULE_ALPHANUMERIC_WITH_UNDERSCORE_HYPHEN_ONLY |
+    SANITIZEC_RULE_EMAIL_ALLOWED_CHARS;
+
 char* sanitizec_apply(const char* input, int ruleset, char** errmsg) {
         if (errmsg) *errmsg = NULL;
 
@@ -77,16 +89,13 @@ char* sanitizec_apply(const char* input, int ruleset, char** errmsg) {
         sanitizec_buffer_t* current_buffer = NULL;
         sanitizec_buffer_t* output_buffer  = &buffers[0];
         const char* current_string         = input;
-
-        int last_rule_index = -1;
-        for (int i = 0; rules_map[i].flag != 0; i++) {
-                if (ruleset & rules_map[i].flag) last_rule_index = i;
-        }
+        int remaining_ruleset              = ruleset & ruleset_mask;
 
         for (int i = 0; rules_map[i].flag != 0; i++) {
                 if (ruleset & rules_map[i].flag) {
+                        remaining_ruleset &= ~rules_map[i].flag;
                         sanitizec_buffer_reset(output_buffer);
-                        if (i == last_rule_index)
+                        if (remaining_ruleset == 0)
                                 sanitizec_buffer_force_heap(output_buffer);
                         if (!rules_map[i].func(current_string, output_buffer,
                                                errmsg)) {

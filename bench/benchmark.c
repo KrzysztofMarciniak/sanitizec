@@ -11,6 +11,7 @@
 #define SHORT_ITERATIONS 250000
 #define LONG_ITERATIONS 32
 #define LONG_INPUT_BYTES (256 * 1024)
+#define BENCH_REPEATS 5
 
 static const char hex_digits[] = "0123456789abcdef";
 
@@ -26,6 +27,32 @@ static void set_unique_prefix(char* input, size_t value) {
         }
 }
 
+static int compare_times(const void* lhs, const void* rhs) {
+        double left  = *(const double*)lhs;
+        double right = *(const double*)rhs;
+        return (left > right) - (left < right);
+}
+
+static int run_iterations(const char* name, char* input, int ruleset,
+                          size_t iterations, int unique_inputs,
+                          size_t* unique_value, uint64_t* checksum) {
+        for (size_t i = 0; i < iterations; i++) {
+                if (unique_inputs) set_unique_prefix(input, (*unique_value)++);
+                char* errmsg = NULL;
+                char* output = sanitizec_apply(input, ruleset, &errmsg);
+                if (!output) {
+                        fprintf(stderr, "%s: sanitizec_apply failed: %s\n",
+                                name, errmsg ? errmsg : "unknown error");
+                        free(errmsg);
+                        return 1;
+                }
+                *checksum += (unsigned char)output[0];
+                free(output);
+                free(errmsg);
+        }
+        return 0;
+}
+
 static int run_case(const char* name, const char* input_template,
                     size_t input_len, int ruleset, size_t iterations,
                     int unique_inputs) {
@@ -36,48 +63,52 @@ static int run_case(const char* name, const char* input_template,
         }
         memcpy(input, input_template, input_len + 1);
 
-        struct timespec start;
-        struct timespec end;
-        if (clock_gettime(CLOCK_MONOTONIC, &start) != 0) {
-                perror("clock_gettime");
+        uint64_t checksum     = 0;
+        size_t unique_value   = 0;
+        size_t warmup_calls   = iterations / 10;
+        double sample_seconds[BENCH_REPEATS];
+        if (warmup_calls == 0) warmup_calls = 1;
+        if (run_iterations(name, input, ruleset, warmup_calls, unique_inputs,
+                           &unique_value, &checksum)) {
                 free(input);
                 return 1;
         }
 
-        uint64_t checksum = 0;
-        for (size_t i = 0; i < iterations; i++) {
-                if (unique_inputs) set_unique_prefix(input, i);
-
-                char* errmsg = NULL;
-                char* output = sanitizec_apply(input, ruleset, &errmsg);
-                if (!output) {
-                        fprintf(stderr, "%s: sanitizec_apply failed: %s\n",
-                                name, errmsg ? errmsg : "unknown error");
-                        free(errmsg);
+        for (size_t repeat = 0; repeat < BENCH_REPEATS; repeat++) {
+                struct timespec start;
+                struct timespec end;
+                if (clock_gettime(CLOCK_MONOTONIC, &start) != 0) {
+                        perror("clock_gettime");
                         free(input);
                         return 1;
                 }
-                checksum += (unsigned char)output[0];
-                free(output);
-                free(errmsg);
+                if (run_iterations(name, input, ruleset, iterations,
+                                   unique_inputs, &unique_value, &checksum)) {
+                        free(input);
+                        return 1;
+                }
+                if (clock_gettime(CLOCK_MONOTONIC, &end) != 0) {
+                        perror("clock_gettime");
+                        free(input);
+                        return 1;
+                }
+                sample_seconds[repeat] = elapsed_seconds(start, end);
         }
 
-        if (clock_gettime(CLOCK_MONOTONIC, &end) != 0) {
-                perror("clock_gettime");
-                free(input);
-                return 1;
-        }
+        qsort(sample_seconds, BENCH_REPEATS, sizeof(sample_seconds[0]),
+              compare_times);
 
-        double elapsed = elapsed_seconds(start, end);
+        double elapsed = sample_seconds[BENCH_REPEATS / 2];
         double calls_per_second = (double)iterations / elapsed;
         double mebibytes_per_second =
             ((double)input_len * (double)iterations) /
             (elapsed * 1024.0 * 1024.0);
 
-        printf("%-25s input=%7zu B  calls=%7zu  time=%8.3f ms  "
+        printf("%-25s input=%7zu B  calls=%7zu  median=%8.3f ms  "
+               "samples=%d  "
                "rate=%10.0f calls/s  input=%8.2f MiB/s  checksum=%" PRIu64
                "\n",
-               name, input_len, iterations, elapsed * 1000.0,
+               name, input_len, iterations, elapsed * 1000.0, BENCH_REPEATS,
                calls_per_second, mebibytes_per_second, checksum);
         free(input);
         return 0;

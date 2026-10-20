@@ -87,10 +87,11 @@ make benchmark
 ./bench/run.sh
 ```
 
-The runner reports short repeated/unique inputs and large repeated/unique
-payloads, with elapsed time, calls per second, and input throughput. To measure
-the optional memoization build, use `make CACHE=1 benchmark`; compare multiple
-runs on the same machine because these numbers are workload- and system-specific.
+The runner warms up each case, takes five samples, and reports the median for
+short repeated/unique inputs and large repeated/unique payloads, with calls per
+second and input throughput. To measure the optional memoization build, use
+`make CACHE=1 benchmark`; compare runs on the same machine because results are
+workload- and system-specific.
 
 **Ninja:**
 
