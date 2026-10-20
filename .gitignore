@@ -1,6 +1,8 @@
 *o
 test
 test-runner
+bench-runner
 .ninja_log
 .ninja_deps
 build.ninja
+/.sanitizec-build-config*

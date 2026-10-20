@@ -33,7 +33,12 @@ A minimal, rule-based C library for string sanitization in web development, desi
 | **Reverse Shell**    | `SANITIZEC_RULE_REVERSE_SHELL`| Removes keywords associated with reverse shell commands.                                    | `"; nc 127.0.0.1 4444 -e /bin/sh"` → `";  4444 -e bin"` |
 | **Alphanumeric w/ Spaces** | `SANITIZEC_RULE_ALPHANUMERIC_WITH_SPACES_ONLY` | Alphanumeric but with spaces. | `"; Hello World$123!"` → `" Hello World123"` |
 | **Hex Only** | `SANITIZEC_RULE_HEX_ONLY` | hex letters only | `"DE-AD-BE-EF! xyz@123"` → `"DEADBEEF123"` |
+| **URL Component Encode** | `SANITIZEC_RULE_URL_COMPONENT_ENCODE` | Percent-encodes UTF-8 bytes using RFC 3986, leaving only unreserved characters (`A-Z`, `a-z`, `0-9`, `-`, `.`, `_`, `~`) unchanged. Existing percent sequences are encoded again. | `"a b/c"` → `"a%20b%2Fc"` |
+| **Printable ASCII Only** | `SANITIZEC_RULE_ASCII_PRINTABLE_ONLY` | Keeps printable ASCII bytes (`0x20`–`0x7E`), removing control and non-ASCII bytes. | `"A\tB é"` → `"AB "` |
+| **Alphanumeric, Underscore, and Hyphen Only** | `SANITIZEC_RULE_ALPHANUMERIC_WITH_UNDERSCORE_HYPHEN_ONLY` | Keeps ASCII letters, digits, `_`, and `-`. | `"User_Name-123!"` → `"User_Name-123"` |
+| **Email Character Allowlist** | `SANITIZEC_RULE_EMAIL_ALLOWED_CHARS` | Keeps only ASCII letters, digits, `.`, `_`, `%`, `+`, `-`, and `@`. This filters characters; it does **not** validate email syntax or make an address safe for any particular context. | `"alice+tag@example.com!"` → `"alice+tag@example.com"` |
 
+Rules can be combined using the bitmask API; transformations run in the dispatcher order shown in the source, so encoders and filters may change one another's output. Use URL component encoding only for an individual URL component, not for an entire URL or as a substitute for context-specific output encoding.
 
 ---
 
@@ -59,6 +64,30 @@ make check
 ```
 
 `make test` builds the test runner; `make check` builds and runs it.
+The default optimization flags are `-O3`. Override `OPTFLAGS` or supply
+`ARCHFLAGS` for optional host-specific tuning; for example,
+`make OPTFLAGS=-O3 ARCHFLAGS=-march=native`. Native tuning can make the library
+incompatible with other CPU models. `CFLAGS`, `CPPFLAGS`, and `THREAD_FLAGS`
+remain configurable, as do `LDFLAGS` and `LDLIBS`. Runtime memoization is off by
+default because it slows unique-input workloads; enable it for repetition-heavy
+workloads with `make CACHE=1`. The cache is process-local, thread-safe, and
+limited to a nominal 1 MiB including index and entry metadata (allocator
+overhead excluded). It retains cached input/output bytes until eviction or
+process exit. Make tracks build-flag changes and rebuilds affected objects
+automatically. Use `make CACHE=1 install` to install a memoization-enabled build.
+
+Run all benchmark cases with:
+
+```sh
+make benchmark
+# or
+./bench/run.sh
+```
+
+The runner reports short repeated/unique inputs and large repeated/unique
+payloads, with elapsed time, calls per second, and input throughput. To measure
+the optional memoization build, use `make CACHE=1 benchmark`; compare multiple
+runs on the same machine because these numbers are workload- and system-specific.
 
 **Ninja:**
 
@@ -68,6 +97,11 @@ ninja
 ninja test
 ./test
 ```
+
+The Ninja generator uses the same `OPTFLAGS`, `ARCHFLAGS`, `CFLAGS`,
+`CPPFLAGS`, `LDFLAGS`, `LDLIBS`, and `THREAD_FLAGS` environment variables as
+Make, plus `CACHE=1` to enable runtime memoization, for example:
+`OPTFLAGS=-O3 ARCHFLAGS=-march=native CACHE=1 ./generate_build.sh`.
 
 ---
 

@@ -4,10 +4,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef SANITIZEC_ENABLE_CACHE
+#include "misc/sanitizec_cache.h"
+#endif
 #include "misc/strdup_safe.h"
 #include "rules/alpha_only/alpha_only.h"
 #include "rules/alphanumeric_only/alphanumeric_only.h"
 #include "rules/alphanumeric_with_spaces_only/alphanumeric_with_spaces_only.h"
+#include "rules/alphanumeric_with_underscore_hyphen_only/alphanumeric_with_underscore_hyphen_only.h"
+#include "rules/ascii_printable_only/ascii_printable_only.h"
+#include "rules/email_allowed_chars/email_allowed_chars.h"
 #include "rules/escape_xss/escape_xss.h"
 #include "rules/hex_only/hex_only.h"
 #include "rules/numeric_only/numeric_only.h"
@@ -15,6 +21,7 @@
 #include "rules/sanitize_reverse_shell/sanitize_reverse_shell.h"
 #include "rules/sanitize_sql/sanitize_sql.h"
 #include "rules/trim_whitespace/trim_whitespace.h"
+#include "rules/url_component_encode/url_component_encode.h"
 
 typedef char* (*rule_func_t)(char*, char**);
 
@@ -39,6 +46,15 @@ static const rule_map_t rules_map[] = {
      alphanumeric_with_spaces_apply, "Alphanumeric but with spaces."},
     {SANITIZEC_RULE_REVERSE_SHELL, reverse_shell_safe_apply,
      "Remove reverse shell keywords."},
+    {SANITIZEC_RULE_URL_COMPONENT_ENCODE, url_component_encode_apply,
+     "URL component encoding"},
+    {SANITIZEC_RULE_ASCII_PRINTABLE_ONLY, ascii_printable_only_apply,
+     "Printable ASCII only"},
+    {SANITIZEC_RULE_ALPHANUMERIC_WITH_UNDERSCORE_HYPHEN_ONLY,
+     alphanumeric_with_underscore_hyphen_only_apply,
+     "Alphanumeric, underscore, and hyphen only"},
+    {SANITIZEC_RULE_EMAIL_ALLOWED_CHARS, email_allowed_chars_apply,
+     "Email-address character allowlist"},
     {0, NULL, NULL}};
 
 char* sanitizec_apply(const char* input, int ruleset, char** errmsg) {
@@ -48,6 +64,11 @@ char* sanitizec_apply(const char* input, int ruleset, char** errmsg) {
                 if (errmsg) *errmsg = strdup_safe("Input string is NULL.");
                 return NULL;
         }
+
+#ifdef SANITIZEC_ENABLE_CACHE
+        char* cached_string = sanitizec_cache_get(input, ruleset);
+        if (cached_string) return cached_string;
+#endif
 
         char* current_string = strdup_safe(input);
         if (!current_string) {
@@ -84,5 +105,8 @@ char* sanitizec_apply(const char* input, int ruleset, char** errmsg) {
                 }
         }
 
+#ifdef SANITIZEC_ENABLE_CACHE
+        sanitizec_cache_store(input, ruleset, current_string);
+#endif
         return current_string;
 }

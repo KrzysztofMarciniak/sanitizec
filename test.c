@@ -4,13 +4,18 @@
 #include "tests/alpha_only/alpha_only.h"
 #include "tests/alphanumeric_only/alphanumeric_only.h"
 #include "tests/alphanumeric_with_spaces_only/alphanumeric_with_spaces_only.h"
+#include "tests/alphanumeric_with_underscore_hyphen_only/alphanumeric_with_underscore_hyphen_only.h"
+#include "tests/ascii_printable_only/ascii_printable_only.h"
+#include "tests/email_allowed_chars/email_allowed_chars.h"
 #include "tests/escape_xss/escape_xss.h"
 #include "tests/hex_only/hex_only.h"
 #include "tests/numeric_only/numeric_only.h"
 #include "tests/sanitize_lfi/sanitize_lfi.h"
 #include "tests/sanitize_reverse_shell/sanitize_reverse_shell.h"
 #include "tests/sanitize_sql/sanitize_sql.h"
+#include "tests/sanitizec_cache/sanitizec_cache.h"
 #include "tests/trim_whitespace/trim_whitespace.h"
+#include "tests/url_component_encode/url_component_encode.h"
 
 /**
  * @brief Main test manager entry point.
@@ -68,6 +73,26 @@ int main(void) {
         }
         total_tests++;
         if (run_hex_only_test() == 0) {
+                number_failed++;
+        }
+        total_tests++;
+        if (run_url_component_encode_test() == 0) {
+                number_failed++;
+        }
+        total_tests++;
+        if (run_ascii_printable_only_test() == 0) {
+                number_failed++;
+        }
+        total_tests++;
+        if (run_alphanumeric_with_underscore_hyphen_only_test() == 0) {
+                number_failed++;
+        }
+        total_tests++;
+        if (run_email_allowed_chars_test() == 0) {
+                number_failed++;
+        }
+        total_tests++;
+        if (run_sanitizec_cache_test() == 0) {
                 number_failed++;
         }
         printf("\n--- Test Manager Complete ---\n");

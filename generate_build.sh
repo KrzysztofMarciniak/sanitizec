@@ -3,7 +3,24 @@
 BUILD_FILE="build.ninja"
 LIB_NAME="sanitizec" 
 
-LIB_SRCS=$(find . -type f -name "*.c" | grep -v "/test.c" | grep -v "/tests/" | sed 's/^\.\///' | tr '\n' ' ')
+CC=${CC:-cc}
+CPPFLAGS=${CPPFLAGS:--I.}
+CFLAGS=${CFLAGS:--Wall -Wextra}
+OPTFLAGS=${OPTFLAGS:--O3}
+ARCHFLAGS=${ARCHFLAGS:-}
+LDFLAGS=${LDFLAGS:-}
+LDLIBS=${LDLIBS:-}
+THREAD_FLAGS=${THREAD_FLAGS:--pthread}
+CACHE=${CACHE:-0}
+CACHE_FLAGS=
+if [ "$CACHE" = "1" ]; then
+    CACHE_FLAGS=-DSANITIZEC_ENABLE_CACHE
+fi
+
+LIB_SRCS=$(find . -type f -name "*.c" | grep -v "/test.c" | grep -v "/tests/" | grep -v "/misc/sanitizec_cache.c" | sed 's/^\.\///' | tr '\n' ' ')
+if [ "$CACHE" = "1" ]; then
+    LIB_SRCS="$LIB_SRCS misc/sanitizec_cache.c"
+fi
 
 TEST_SRCS="test.c $(find tests -type f -name "*.c" | sed 's/^\.\///' | tr '\n' ' ')"
 
@@ -16,28 +33,29 @@ if [ -z "$LIB_SRCS" ]; then
 fi
 
 {
-echo "cc = cc"
+echo "cc = $CC"
 echo "ranlib = ranlib"
 echo ""
-echo "# Compiler flags: -I. for main headers, -fPIC for shared library, -Wall/-Wextra for quality"
-echo "cflags = -I. -I./rules -fPIC -Wall -Wextra" # Added -I./rules for rule headers
-echo "ldflags = -shared"
-echo "libs = "
+echo "# Override CPPFLAGS, OPTFLAGS, ARCHFLAGS, CFLAGS, LDFLAGS, LDLIBS, THREAD_FLAGS, and CACHE."
+echo "cflags = $CPPFLAGS $OPTFLAGS $ARCHFLAGS $CFLAGS $CACHE_FLAGS -fPIC $THREAD_FLAGS"
+echo "ldflags = $LDFLAGS $THREAD_FLAGS"
+echo "sharedflags = -shared $LDFLAGS $THREAD_FLAGS"
+echo "libs = $LDLIBS"
 echo ""
 echo "rule cc"
 echo "  command = \$cc \$cflags -c \$in -o \$out"
 echo "  description = CC \$in"
 echo ""
 echo "rule sharedlib"
-echo "  command = \$cc \$ldflags -o \$out \$in \$libs"
+echo "  command = \$cc \$sharedflags -o \$out \$in \$libs"
 echo "  description = SHAREDLIB \$out"
 echo ""
 echo "rule link"
-echo "  command = \$cc \$in \$libs -o \$out -Wl,-rpath,."
+echo "  command = \$cc \$ldflags \$in \$libs -o \$out -Wl,-rpath,."
 echo "  description = LINK \$out"
 echo ""
 echo "rule clean"
-echo "  command = rm -f \`find . -name '*.o'\` *.so test"
+echo "  command = rm -f \`find . -name '*.o'\` *.so test test-runner"
 echo "  description = CLEAN"
 echo ""
 echo "# --- Object File Targets ---"

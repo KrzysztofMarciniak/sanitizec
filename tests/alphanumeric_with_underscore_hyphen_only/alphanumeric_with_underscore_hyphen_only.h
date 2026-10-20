@@ -1,0 +1,6 @@
+#ifndef TEST_ALPHANUMERIC_WITH_UNDERSCORE_HYPHEN_ONLY_H
+#define TEST_ALPHANUMERIC_WITH_UNDERSCORE_HYPHEN_ONLY_H
+
+int run_alphanumeric_with_underscore_hyphen_only_test(void);
+
+#endif
