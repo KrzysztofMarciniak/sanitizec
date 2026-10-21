@@ -29,8 +29,8 @@ A minimal, rule-based C library for string sanitization in web development, desi
 | **Numeric Only**     | `SANITIZEC_RULE_NUMERIC_ONLY`| Filters out all characters that are not numeric digits (0-9).                                | `"Price: $12.50"` → `"1250"`              |
 | **Alphanumeric Only**| `SANITIZEC_RULE_ALPHANUMERIC_ONLY` | Filters out all characters that are not alphanumeric (A-Z, a-z, 0-9).                        | `"User-Name: JohnDoe_123!"` → `"UserNameJohnDoe123"` |
 | **LFI**              | `SANITIZEC_RULE_LFI`         | Removes `../` and `..` to prevent directory traversal in file paths.                         | `"../../etc/passwd"` → `"/etc/passwd"`   |
-| **SQL**              | `SANITIZEC_RULE_SQL`         | Removes common SQL keywords to mitigate SQL injection attacks.                               | `"1 OR 1=1; --"` → `"1 OR ; --"`          |
-| **Reverse Shell**    | `SANITIZEC_RULE_REVERSE_SHELL`| Removes keywords associated with reverse shell commands.                                    | `"; nc 127.0.0.1 4444 -e /bin/sh"` → `";  4444 -e bin"` |
+| **SQL**              | `SANITIZEC_RULE_SQL`         | Removes common SQL keywords, operators, and comment markers.                                | `"1 OR 1=1; --"` → `"1; "`                 |
+| **Reverse Shell**    | `SANITIZEC_RULE_REVERSE_SHELL`| Removes common shell, network-tool, and reverse-shell indicators.                          | `"; nc 127.0.0.1 4444 -e /bin/sh"` → `";  4444  bin"` |
 | **Alphanumeric w/ Spaces** | `SANITIZEC_RULE_ALPHANUMERIC_WITH_SPACES_ONLY` | Alphanumeric but with spaces. | `"; Hello World$123!"` → `" Hello World123"` |
 | **Hex Only** | `SANITIZEC_RULE_HEX_ONLY` | hex letters only | `"DE-AD-BE-EF! xyz@123"` → `"DEADBEEF123"` |
 | **URL Component Encode** | `SANITIZEC_RULE_URL_COMPONENT_ENCODE` | Percent-encodes UTF-8 bytes using RFC 3986, leaving only unreserved characters (`A-Z`, `a-z`, `0-9`, `-`, `.`, `_`, `~`) unchanged. Existing percent sequences are encoded again. | `"a b/c"` → `"a%20b%2Fc"` |
@@ -40,6 +40,11 @@ A minimal, rule-based C library for string sanitization in web development, desi
 
 Rules can be combined using the bitmask API; transformations run in the dispatcher order shown in the source, so encoders and filters may change one another's output. Use URL component encoding only for an individual URL component, not for an entire URL or as a substitute for context-specific output encoding.
 
+SQL and shell rules are heuristic text filters, not parsers or security
+boundaries. They can remove benign text and cannot guarantee that the
+remaining input is safe. Use parameterized queries for SQL and avoid building
+shell commands from untrusted input.
+
 ---
 
 ## Installation and Building
@@ -48,7 +53,11 @@ Rules can be combined using the bitmask API; transformations run in the dispatch
 
 - C compiler (e.g., GCC or Clang)
 - GNU Make or Ninja installed
-- Python 3 for generating the SQL and shell match automata
+
+SQL and shell pattern automata are checked into the repository, so Python is
+not needed to build, test, or install the library. `tools/generate_patterns.py`
+is an optional maintainer tool for regenerating those tables after changing
+the pattern lists.
 
 ---
 

@@ -28,14 +28,14 @@ int run_reverse_shell_safe_test(void) {
             "This is not an IP 123.4. but 1.1.1.1 is.";
 
         const char* expected_revised =
-            " -l -p 4444 "
-            " -i > 4444 0>1"
-            "  -c ' pipe'"
+            "   4444 "
+            "  > 4444   "
+            " ' pipe'"
             " = new (host, port)"
             "UserID=1  password=1"
             "TEST:  *"
             ":80"
-            "-END"
+            "ND"
             "This is not an IP 123.4. but  is.";
 
         char* errmsg      = NULL;
@@ -76,6 +76,20 @@ int run_reverse_shell_safe_test(void) {
             SANITIZEC_RULE_REVERSE_SHELL, &errmsg);
         if (!safe_output || strcmp(safe_output, "           ") != 0) {
                 fprintf(stderr, "Test FAILED: Shell automaton patterns.\n");
+                free(safe_output);
+                free(errmsg);
+                return 0;
+        }
+        free(safe_output);
+        free(errmsg);
+        errmsg = NULL;
+        safe_output = sanitizec_apply(
+            "NCATsocatTELNETcurlWGETopensslpythonperlphprubynodeawk"
+            "zshkshdashpowershellcmd.exemknodfifoconnectreverselistener"
+            "listennohupsetsidpty",
+            SANITIZEC_RULE_REVERSE_SHELL, &errmsg);
+        if (!safe_output || safe_output[0] != '\0') {
+                fprintf(stderr, "Test FAILED: Expanded shell patterns.\n");
                 free(safe_output);
                 free(errmsg);
                 return 0;

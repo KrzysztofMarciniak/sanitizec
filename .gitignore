@@ -6,4 +6,3 @@ bench-runner
 .ninja_deps
 build.ninja
 /.sanitizec-build-config*
-misc/sanitizec_patterns.generated.h

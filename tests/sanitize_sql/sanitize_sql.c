@@ -26,11 +26,11 @@ int run_sql_safe_test(void) {
             "Concat(A, B)";
 
         const char* expected =
-            "ID' OR  --;"
+            "ID' ;"
             "table; "
-            "  * from t;"
+            " * from t;"
             " foreign_keys;"
-            "Wait and (5) seconds;"
+            "Wait(5) seconds;"
             " users;"
             " from logs;"
             "(A, B)";
@@ -70,6 +70,19 @@ int run_sql_safe_test(void) {
             SANITIZEC_RULE_SQL, &errmsg);
         if (!safe_output || safe_output[0] != '\0') {
                 fprintf(stderr, "Test FAILED: SQL automaton patterns.\n");
+                free(safe_output);
+                free(errmsg);
+                return 0;
+        }
+        free(safe_output);
+        free(errmsg);
+        errmsg = NULL;
+        safe_output = sanitizec_apply(
+            "CREATEALTERTRUNCATEGRANTREVOKEEXECUTEWAITFORPG_SLEEP"
+            "INFORMATION_SCHEMALOAD_FILE--/**/",
+            SANITIZEC_RULE_SQL, &errmsg);
+        if (!safe_output || safe_output[0] != '\0') {
+                fprintf(stderr, "Test FAILED: Expanded SQL patterns.\n");
                 free(safe_output);
                 free(errmsg);
                 return 0;

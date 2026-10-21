@@ -34,9 +34,6 @@ all: $(LIBRARY)
 $(LIBRARY): $(LIB_OBJECTS)
 	$(CC) -shared $(LINK_FLAGS) $(THREAD_FLAGS) -o $@ $^ $(LDLIBS)
 
-$(PATTERN_HEADER): tools/generate_patterns.py
-	python3 $< $@
-
 misc/sanitizec_pattern.o rules/sanitize_sql/sanitize_sql.o \
 rules/sanitize_reverse_shell/sanitize_reverse_shell.o: $(PATTERN_HEADER)
 
@@ -66,7 +63,7 @@ benchmark: bench-runner
 clean:
 	$(RM) $(LIB_OBJECTS) $(TEST_OBJECTS) $(LIBRARY) test-runner \
 		bench-runner misc/sanitizec_cache.o $(BUILD_CONFIG) \
-		$(BUILD_CONFIG).tmp $(PATTERN_HEADER)
+		$(BUILD_CONFIG).tmp
 
 install: $(LIBRARY)
 	install -Dm644 $(LIBRARY) $(DESTDIR)$(PREFIX)/lib/$(LIBRARY)
